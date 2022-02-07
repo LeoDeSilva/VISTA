@@ -1,7 +1,7 @@
-newWindow(500,500)
+newWindow(500,500);
 
-bool isPrime(num n) {
-    for (num i : 2 => n) {
+bool isPrime(int n) {
+    for (int i : 2 => n) {
         if (n % i == 0) {
             return false;
         }
@@ -9,14 +9,14 @@ bool isPrime(num n) {
     return true;
 }
 
-Vector2D position = newVector2(0,0) 
+Vector2D position = newVector2(0,0);
 
 int i = 9;
 float n = 0.5;
-str s = "hello world";
+string s = "hello world";
 
 if (isPrime(i)) {
-    text(string(i) + "is prime", position);
+    text(str(i) + "is prime", position);
 } else {
-    text(string(i) + "is not prime", position);
+    text(str(i) + "is not prime", position);
 }

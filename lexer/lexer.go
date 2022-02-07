@@ -83,6 +83,8 @@ func (l *Lexer) nextToken() (Token, error) {
 		tok = NewToken(RBRACE, l.ch)
 	case ';':
 		tok = NewToken(SEMICOLON, l.ch)
+	case ':':
+		tok = NewToken(COLON, l.ch)
 	case '=':
 		tok = l.readDouble(EQ, map[byte]string{'=': EE, '>': ARROW})
 	case '>':
@@ -119,7 +121,7 @@ func (l *Lexer) nextToken() (Token, error) {
 			return tok, nil
 		}
 
-		return NewToken(ERROR, l.ch), errors.New("SyntaxError: invalid character in lexer")
+		return NewToken(ERROR, l.ch), errors.New("SyntaxError: invalid character in lexer: " + string(l.ch))
 	}
 	l.readChar()
 	return tok, nil

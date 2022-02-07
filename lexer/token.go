@@ -30,6 +30,15 @@ var keywords = map[string]string{
 	"string[]": STR_ARRAY,
 	"int[]":    INT_ARRAY,
 	"float[]":  FLOAT_ARRAY,
+	"bool":     BOOL,
+	"bool[]":   BOOL_ARRAY,
+	"null":     NULL,
+
+	"if":     IF,
+	"for":    FOR,
+	"while":  WHILE,
+	"else":   ELSE,
+	"return": RETURN,
 }
 
 const (
@@ -43,6 +52,15 @@ const (
 	INT_ARRAY   = "INT_ARRAY"
 	FLOAT_ARRAY = "FLOAT_ARRAY"
 	STR_ARRAY   = "STRING_ARRAY"
+	BOOL        = "BOOL"
+	BOOL_ARRAY  = "BOOL_ARRAY"
+	NULL        = "NULL"
+
+	IF     = "IF"
+	FOR    = "FOR"
+	WHILE  = "WHILE"
+	ELSE   = "ELSE"
+	RETURN = "RETURN"
 
 	ADD = "ADD"
 	SUB = "SUB"
@@ -62,6 +80,7 @@ const (
 
 	COMMA     = "COMMA"
 	SEMICOLON = "SEMICOLON"
+	COLON     = "COLON"
 	ARROW     = "ARROW"
 	DOT       = "DOT"
 
