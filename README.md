@@ -2,7 +2,7 @@
 Programming language designed for 2D graphics
 
 ## Concept Syntax
-```
+```golang
 newWindow(500,500)
 
 bool isPrime(num n) {
@@ -27,7 +27,7 @@ if (isPrime(i)) {
 }
 ```
 
-```
+```golang
 newWindow(500,500);
 
 num[] randomSize() {
