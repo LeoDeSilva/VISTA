@@ -157,7 +157,7 @@ func (l *Lexer) readString(ch byte) (string, error) {
 
 func (l *Lexer) readIdentifier() string {
 	position := l.position
-	for isLetter(l.ch) {
+	for isLetter(l.ch) || '0' <= l.ch && l.ch <= '9' || l.ch == '[' || l.ch == ']' {
 		l.readChar()
 	}
 	return l.program[position:l.position]
@@ -192,7 +192,8 @@ func isNumber(number string) (string, error) {
 		if count > 1 {
 			return "", errors.New("SyntaxError: > 1 decimal points in float")
 		}
+		return FLOAT, nil
 	}
 
-	return NUMBER, nil
+	return INT, nil
 }

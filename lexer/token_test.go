@@ -13,8 +13,10 @@ func Test_lookupIdentifier(t *testing.T) {
 		wantResult string
 		wantErr    bool
 	}{
-		{args: "num", wantResult: NUM},
-		{args: "str", wantResult: STR},
+		{args: "int", wantResult: INT},
+		{args: "string", wantResult: STRING},
+		{args: "float[]", wantResult: FLOAT_ARRAY},
+		{args: "string[]", wantResult: STR_ARRAY},
 		{args: "", wantErr: true},
 	}
 	for i, tt := range tests {
@@ -54,8 +56,8 @@ func TestLexer_nextToken(t *testing.T) {
 		{l: NewLexer("\"Hello World\""), wantResult: Token{STRING, "Hello World"}},
 		{l: NewLexer("In"), wantResult: Token{IDENTIFIER, "In"}},
 		{l: NewLexer("\"Hello World'"), wantResult: Token{ERROR, ""}, wantErr: true},
-		{l: NewLexer("10"), wantResult: Token{NUMBER, "10"}},
-		{l: NewLexer("10.2"), wantResult: Token{NUMBER, "10.2"}},
+		{l: NewLexer("10"), wantResult: Token{INT, "10"}},
+		{l: NewLexer("10.2"), wantResult: Token{FLOAT, "10.2"}},
 		{l: NewLexer("10..2"), wantResult: Token{ERROR, ""}, wantErr: true},
 		{l: NewLexer("10.2."), wantResult: Token{ERROR, ""}, wantErr: true},
 		{l: NewLexer("."), wantResult: Token{ERROR, "."}, wantErr: true},
@@ -90,11 +92,11 @@ func Test_isNumber(t *testing.T) {
 		wantRes string
 		wantErr bool
 	}{
-		{number: "10", wantRes: NUMBER},
-		{number: "10.2", wantRes: NUMBER},
+		{number: "10", wantRes: INT},
+		{number: "10.2", wantRes: FLOAT},
 		{number: "10.2.", wantErr: true},
 		{number: "10.", wantErr: true},
-		{number: "0", wantRes: NUMBER},
+		{number: "0", wantRes: INT},
 		{number: "this", wantErr: true},
 		{number: "10.h", wantErr: true},
 	}
@@ -121,7 +123,6 @@ func TestLexer_readIdentifier(t *testing.T) {
 		{NewLexer("x."), "x"},
 		{NewLexer("."), ""},
 		{NewLexer(""), ""},
-		{NewLexer("10"), ""},
 		{NewLexer(".this"), ""},
 		{NewLexer("hello world"), "hello"},
 		{NewLexer("HelloWorld"), "HelloWorld"},
@@ -209,12 +210,12 @@ func TestLexer_Lex(t *testing.T) {
 		wantRes []Token
 		wantErr bool
 	}{
-		{program: "10", wantRes: []Token{{NUMBER, "10"}, {EOF, ""}}},
-		{program: "10+2.5", wantRes: []Token{{NUMBER, "10"}, {ADD, "+"}, {NUMBER, "2.5"}, {EOF, ""}}},
-		{program: "10min => hours", wantRes: []Token{{NUMBER, "10"}, {IDENTIFIER, "min"}, {ARROW, "=>"}, {IDENTIFIER, "hours"}, {EOF, ""}}}, // in can also be =>
+		{program: "10", wantRes: []Token{{INT, "10"}, {EOF, ""}}},
+		{program: "10+2.5", wantRes: []Token{{INT, "10"}, {ADD, "+"}, {FLOAT, "2.5"}, {EOF, ""}}},
+		{program: "10min => hours", wantRes: []Token{{INT, "10"}, {IDENTIFIER, "min"}, {ARROW, "=>"}, {IDENTIFIER, "hours"}, {EOF, ""}}}, // in can also be =>
 		{program: "'Helloworld", wantRes: []Token{}, wantErr: true},
 		{program: "'Hello world'", wantRes: []Token{{STRING, "Hello world"}, {EOF, ""}}},
-		{program: "sum(10,2,3)", wantRes: []Token{{IDENTIFIER, "sum"}, {LPAREN, "("}, {NUMBER, "10"}, {COMMA, ","}, {NUMBER, "2"}, {COMMA, ","}, {NUMBER, "3"}, {RPAREN, ")"}, {EOF, ""}}},
+		{program: "sum(10,2,3)", wantRes: []Token{{IDENTIFIER, "sum"}, {LPAREN, "("}, {INT, "10"}, {COMMA, ","}, {INT, "2"}, {COMMA, ","}, {INT, "3"}, {RPAREN, ")"}, {EOF, ""}}},
 	}
 	for i, tt := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {

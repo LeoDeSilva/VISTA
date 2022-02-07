@@ -24,20 +24,25 @@ func lookupIdentifier(identifier string) (string, error) {
 }
 
 var keywords = map[string]string{
-	"str": STR,
-	"num": NUM,
+	"string":   STRING,
+	"int":      INT,
+	"float":    FLOAT,
+	"string[]": STR_ARRAY,
+	"int[]":    INT_ARRAY,
+	"float[]":  FLOAT_ARRAY,
 }
 
 const (
 	EOF   = "EOF"
 	ERROR = "ERROR"
 
-	NUMBER     = "NUMBER"
-	STRING     = "STRING"
-	IDENTIFIER = "IDENTIFIER"
-
-	NUM = "NUM"
-	STR = "STR"
+	IDENTIFIER  = "IDENTIFIER"
+	INT         = "INT"
+	FLOAT       = "FLOAT"
+	STRING      = "STRING"
+	INT_ARRAY   = "INT_ARRAY"
+	FLOAT_ARRAY = "FLOAT_ARRAY"
+	STR_ARRAY   = "STRING_ARRAY"
 
 	ADD = "ADD"
 	SUB = "SUB"

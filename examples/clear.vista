@@ -1,0 +1,13 @@
+newWindow(500,500);
+
+num[] randomSize() {
+    return [rnd(10), rnd(10)];
+}
+
+void update() {
+    clear();
+    rect(pos, size, BLACK);
+}
+
+Vector2 pos = newVector2(1,1);
+num[] size = randomSize();
