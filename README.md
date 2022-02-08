@@ -22,4 +22,4 @@ null update() {
     rect(pos, [50,50], BLACK)
 }
 ```
-![image](https://user-images.githubusercontent.com/46300158/153036795-6e473b87-acd5-4947-94aa-3db72242b9ef.png)
+![image](https://user-images.githubusercontent.com/46300158/153037130-9538d5fd-0746-4a6a-8ea4-f1be54cff733.png)
