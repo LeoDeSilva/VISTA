@@ -14,6 +14,7 @@ int[] offset() {
 }
 
 null update() {
+    tick(1)
     clear()
     prev = pos
     pos = addVector2D(pos, offset())
@@ -21,3 +22,4 @@ null update() {
     rect(pos, [50,50], BLACK)
 }
 ```
+![image](https://user-images.githubusercontent.com/46300158/153036795-6e473b87-acd5-4947-94aa-3db72242b9ef.png)
