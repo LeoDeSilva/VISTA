@@ -1,0 +1,17 @@
+![PYGAME]
+newWindow(500,500)
+
+global pos = [250, 250]
+global prev = pos
+
+def offset() {
+    return [rnd(-100,100), rnd(-100,100)]
+}
+
+def update() {
+    clear()
+    prev = pos
+    pos = addVector2D(pos, offset())
+    rect(prev, [50,50], RED)
+    rect(pos, [50,50], BLACK)
+}
