@@ -1,3 +1,21 @@
 int numberA = 10
 float numberB = 10.5
 numberA + numberB
+
+
+for (int i => range(0,10)) {
+
+}
+
+
+for (int i => range(len("Hello World"))) {
+
+}
+
+for (string s => "Hello World") {
+
+}
+
+for (int i => range(rnd(100))) {
+    
+}

@@ -1,16 +1,20 @@
+from sre_constants import IN
+from xml.dom.minidom import Identified
+
+
 EOF = "EOF"
 ERROR = "ERROR"
 
 IDENTIFIER = "IDENTIFIER"
-INT         = "INT"
-FLOAT       = "FLOAT"
-STRING      = "STRING"
-INT_ARRAY   = "INT_ARRAY"
-FLOAT_ARRAY = "FLOAT_ARRAY"
-STR_ARRAY   = "STRING_ARRAY"
-BOOL        = "BOOL"
-BOOL_ARRAY  = "BOOL_ARRAY"
-NULL        = "NULL"
+NUMBER     = "NUMBER"
+TYPE = "TYPE"
+INT        = "INT"
+FLOAT      = "FLOAT"
+STRING     = "STRING"
+BOOL       = "BOOL"
+NULL       = "NULL"
+VOID = "VOID"
+ARRAY = "ARRAY"
 
 IF     = "IF"
 FOR    = "FOR"
@@ -46,20 +50,32 @@ RSQUARE = "RSQUARE"
 LBRACE  = "LBRACE"
 RBRACE  = "RBRACE"
 
-class ExpectedLengthError(Exception):
+class LexerException(Exception):
     pass
 
-keywords = {
+class Token:
+    def __init__(self, type : str, literal : str) -> None:
+        self.type = type
+        self.literal = literal
+
+    def __str__(self) -> str:
+        return self.type + " : " + self.literal
+
+class Type(Token):
+    def __init__(self, primary_type: str,literal: str, secondary_type=None)  -> None:
+        super().__init__(TYPE, literal)
+        self.primary_type = primary_type
+        self.secondary_type = secondary_type
+
+types = {
     "string":   STRING,
 	"int":      INT,
 	"float":    FLOAT,
-	"string[]": STR_ARRAY,
-	"int[]":    INT_ARRAY,
-	"float[]":  FLOAT_ARRAY,
 	"bool":     BOOL,
-	"bool[]":   BOOL_ARRAY,
-	"null":     NULL,
+    "void": VOID,
+}
 
+keywords = {
 	"if":     IF,
 	"for":    FOR,
 	"while":  WHILE,
@@ -67,16 +83,14 @@ keywords = {
 	"return": RETURN,
 }
 
-def lookup_identifier(identifier : str) -> str and Exception:
+def lookup_identifier(identifier : str) -> Token and Exception:
     if len(identifier) == 0:
-        return "", ExpectedLengthError("LookupIdentifier: Expected String Length > 0") 
+        return None, LexerException("LookupIdentifier: Expected String Length > 0") 
 
     if identifier in keywords:
-        return keywords[identifier], None
+        return  Token(keywords[identifier], identifier), None
 
-    return IDENTIFIER, None
+    if identifier in types:
+        return Type(types[identifier],identifier), None
 
-class Token:
-    def __init__(self, type : str, literal : str) -> None:
-        self.type = type
-        self.literal = literal
+    return Token(IDENTIFIER, identifier), None
