@@ -2,6 +2,8 @@ from lexer.token import *
 from parse.nodes import *
 from typing import List
 
+#THINK: instead of global keyword, outside function scope is used as global in functions, they can be modified : like pyyhon
+
 class Parser:
     def __init__(self, tokens : List[Token]) -> None:
         self.tokens = tokens
@@ -33,11 +35,13 @@ class Parser:
 
     def parse_expression(self) -> Node and Exception:
         if self.token.type == IDENTIFIER and self.peek().type == EQ:
-            return self.parse_assign()
+            return self.parse_assign(LOCAL)
 
         elif self.token.type == GLOBAL:
             self.advance()
-            return self.parse_init(GLOBAL)
+            if self.token.type == TYPE:
+                return self.parse_init(GLOBAL)
+            return self.parse_assign(GLOBAL)
 
         elif self.token.type == TYPE:
             return self.parse_init(LOCAL)
@@ -108,11 +112,11 @@ class Parser:
         return IfNode(conditions), None
 
 
-    def parse_assign(self) -> Node and Exception:
+    def parse_assign(self, scope : str) -> Node and Exception:
         identifier = self.token.literal
         self.advance(2)
         expr, err = self.parse_expr(0)
-        return AssignNode(identifier, expr), err
+        return AssignNode(scope, identifier, expr), err
 
     def parse_init(self, scope : str) -> Node and Exception:
         node_type = self.token

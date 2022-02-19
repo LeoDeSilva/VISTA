@@ -26,13 +26,14 @@ class ProgramNode(Node):
 
 
 class AssignNode(Node):
-    def __init__(self, identifier : str, expression : Node) -> None:
+    def __init__(self, scope : str , identifier : str, expression : Node) -> None:
         super().__init__(ASSIGN)
+        self.scope = scope
         self.identifier = identifier
         self.expression = expression
 
     def __str__(self) -> str:
-        return "(" + self.identifier + " = " + self.expression.__str__() + ")"
+        return "(" + self.scope + " " + self.identifier + " = " + self.expression.__str__() + ")"
 
 class InitialiseNode(Node):
     def __init__(self, scope : str, type : Type, identifier : str, expression : Node, parameters : List[Node] = None) -> None:
