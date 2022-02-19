@@ -1,5 +1,6 @@
 import sys
 from lexer.lexer import Lexer
+from parse.parser import Parser
 
 def main():
     if len(sys.argv) < 2:
@@ -8,9 +9,12 @@ def main():
         with open(sys.argv[1]) as f:
             l = Lexer(f.read().strip())  
             tokens, err = l.lex()
-            if err != None:
-                raise(err)
+            if err != None: raise(err)
 
-            [print(tok) for tok in tokens]
+            p = Parser(tokens)
+            ast, err = p.parse()
+            if err != None: raise(err)
+            [print(node) for node in ast]
+
 if __name__ == "__main__":
     main()

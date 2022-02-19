@@ -1,9 +1,16 @@
-from sre_constants import IN
-from xml.dom.minidom import Identified
-
-
 EOF = "EOF"
 ERROR = "ERROR"
+
+LOCAL = "LOCAL"
+GLOBAL = "GLOBAL"
+CONDITIONAL = "CONDITIONAL"
+
+PROGRAM = "PROGRAM"
+INITIALISE = "INITIALISE"
+ASSIGN = "ASSIGN"
+BIN_OP = "BIN_OP"
+UNARY_OP = "UNARY_OP"
+INVOKE = "INVOKE"
 
 IDENTIFIER = "IDENTIFIER"
 NUMBER     = "NUMBER"
@@ -16,11 +23,20 @@ NULL       = "NULL"
 VOID = "VOID"
 ARRAY = "ARRAY"
 
+CONDITION = "CONDITION"
 IF     = "IF"
+ELIF = "ELIF"
+ELSE = "ELSE"
 FOR    = "FOR"
 WHILE  = "WHILE"
 ELSE   = "ELSE"
 RETURN = "RETURN"
+
+AND = "AND"
+OR = "OR"
+
+TRUE = "TRUE"
+FALSE = "FALSE"
 
 ADD = "ADD"
 SUB = "SUB"
@@ -62,7 +78,7 @@ class Token:
         return self.type + " : " + self.literal
 
 class Type(Token):
-    def __init__(self, primary_type: str,literal: str, secondary_type=None)  -> None:
+    def __init__(self, primary_type: str,literal: str, secondary_type : str = None)  -> None:
         super().__init__(TYPE, literal)
         self.primary_type = primary_type
         self.secondary_type = secondary_type
@@ -76,11 +92,16 @@ types = {
 }
 
 keywords = {
+    "true": TRUE,
+    "false":FALSE,
 	"if":     IF,
+    "elif": ELIF,
+    "else": ELSE,
 	"for":    FOR,
 	"while":  WHILE,
 	"else":   ELSE,
 	"return": RETURN,
+    "global": GLOBAL,
 }
 
 def lookup_identifier(identifier : str) -> Token and Exception:

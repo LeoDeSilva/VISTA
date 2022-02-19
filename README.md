@@ -2,7 +2,7 @@
 Programming language designed for 2D graphics (based off of PyGame)
 
 ## Concept 
-``` C
+``` typescript
 ![PYGAME]
 newWindow(500,500)
 

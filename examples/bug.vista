@@ -1,0 +1,10 @@
+for (int i => range(rnd(100))) {
+    print(i);
+}
+
+if (contains([1,2,3,4,5], 5)) {
+    string[] strings = ["hello","world"];
+    for (string str => strings) {
+        print(str);
+    }
+}

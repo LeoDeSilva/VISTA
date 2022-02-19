@@ -1,21 +1,16 @@
-int numberA = 10
-float numberB = 10.5
-numberA + numberB
+int numberA = 10;
+bool running = true;
+string[] strings = ["hello", "world"];
+global float numberB = 10.5;
+numberA = numberA + numberB;
 
-
-for (int i => range(0,10)) {
-
-}
-
-
-for (int i => range(len("Hello World"))) {
-
-}
-
-for (string s => "Hello World") {
-
-}
-
-for (int i => range(rnd(100))) {
-    
+if (numberA > 100 && numberA < 1000) {
+    print("LARGER");
+} elif (numberA == 100) {
+    print("SAME");
+    if (numberB == 100 || numberA == 1000) {
+        print("BOTH");
+    }
+} else {
+    print("SMALLER");
 }

@@ -9,7 +9,7 @@ class Lexer:
     def __init__(self, program : str) -> None:
         self.program = program
         self.position = 0
-        self.readPosition = 0
+        self.readPosition = 1
         self.char = self.program[self.position]
 
     def advance(self) -> None:
@@ -33,7 +33,7 @@ class Lexer:
             tok, err = self.lex_token()
             if err != None: return [], err
             tokens.append(tok)
-
+        tokens.append(Token(EOF,""))
         return tokens, None
 
     def lex_token(self) -> Token and Exception:
@@ -57,6 +57,8 @@ class Lexer:
             token = Token(COMMA, self.char)
         elif self.char == ":":
             token = Token(COLON, self.char)
+        elif self.char == ";":
+            token = Token(SEMICOLON, self.char)
 
         elif self.char == "(":
             token = Token(LPAREN, self.char)
@@ -84,6 +86,13 @@ class Lexer:
             token,err = self.lex_double(LT,{"=":LTE})
             if err != None: return None,err
 
+        elif self.char == "&":
+            token,err = self.lex_double(ERROR,{"&":AND})
+            if err != None: return None,err
+        elif self.char == "|":
+            token,err = self.lex_double(ERROR,{"|":OR})
+            if err != None: return None,err
+
         elif self.char in ("'",'"'):
             token, err = self.lex_string(self.char)
             if err != None: return None, err
@@ -99,6 +108,9 @@ class Lexer:
             return token, None
 
         else:
+            return None, LexerException("Lex_Char: Unexpected Character In Lexer: " + self.char)
+
+        if token.type == ERROR:
             return None, LexerException("Lex_Char: Unexpected Character In Lexer: " + self.char)
 
         self.advance()

@@ -1,17 +1,18 @@
-![PYGAME]
-newWindow(500,500)
+![PYGAME];
+newWindow(500,500);
 
-global int[] pos = [250, 250]
-global int[] prev = pos
+global int[] pos = [250, 250];
+global int[] prev = pos;
 
 int[] offset() {
-    return [rnd(-100,100), rnd(-100,100)]
+    return [rnd(-100,100), rnd(-100,100)];
 }
 
 void update() {
-    clear()
-    prev = pos
-    pos = addVector2D(pos, offset())
-    rect(prev, [50,50], RED)
-    rect(pos, [50,50], BLACK)
+    clear();
+    tick(1);
+    prev = pos;
+    pos = addVector2D(pos, offset());
+    rect(prev, [50,50], RED);
+    rect(pos, [50,50], BLACK);
 }
