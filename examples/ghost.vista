@@ -1,0 +1,16 @@
+bool alive = true;
+int score = 0;
+
+while (alive) {
+    int ghostDoor = rnd(3) + 1;
+    int userDoor = intInput("Enter a door:");
+
+    if (ghostDoor == userDoor) {
+        alive = false;
+    } else {
+        print("You survived");
+        score = score + 1;
+    }
+}
+
+print("You died, score:",score);

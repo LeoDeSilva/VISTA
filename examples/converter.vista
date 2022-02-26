@@ -1,0 +1,13 @@
+float goat = 100.0;
+float bread = 1.5;
+float iranian = 0.00002;
+float iphone = 1000.0;
+
+float currency = float(input("Enter currency in GBP:"));
+print(round(1.121212,3));
+
+print("🍞:", round(currency/bread,1));
+print("🐐:", round(currency/goat,1));
+print("📱:", round(currency/iphone,1));
+print("Iranian 💶:", round(currency/iranian,1));
+

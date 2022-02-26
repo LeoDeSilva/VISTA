@@ -1,3 +1,5 @@
+import random
+
 from lexer.token import *
 from parse.nodes import *
 from typing import List, Dict, Callable
@@ -141,6 +143,15 @@ def new_environment() -> Environment:
         functions={
             "range":handle_range,
             "print":handle_print,
+            "input":handle_input,
+            "intInput":handle_int_input,
+            "rnd":handle_rnd,
+
+            "float":handle_float,
+            "int":handle_int,
+            "string":handle_string,
+
+            "round":handle_round,
         },
     )
 
@@ -220,8 +231,83 @@ def handle_range(node , environment : Environment) -> Object and Exception:
 def params_to_string(params : List[Object]) -> str:
     return " ".join([param.__str__() for param in params])
     
-
-
 def handle_print(node : InvokeNode, environment : Environment) -> Object and Exception:
     print(params_to_string(node.parameters))
     return Null(), None
+
+def handle_int_input(node : InvokeNode, environment : Environment) -> Object and Exception:
+    string = params_to_string(node.parameters)
+    user_input = input(string)
+    try:
+        return assign_type(int(user_input)), None
+    except ValueError:
+        return None, EvaluatorException("IntInputError: Input Type Not Type INT, got: " + user_input)
+
+def handle_input(node : InvokeNode, environment : Environment) -> Object and Exception:
+    string = params_to_string(node.parameters)
+    user_input = input(string)
+    return assign_type(user_input), None
+
+def handle_rnd(node : InvokeNode, environment : Environment) -> Object and Exception:
+    if len(node.parameters) == 0 or len(node.parameters) > 2:
+        return None, EvaluatorException("InvokeRndError: Expected parameter length between 1 and 2, got: " + str(len(node.parameters)))
+
+    min = 0
+    max = 0
+    if len(node.parameters) == 1:
+        if node.parameters[0].__type__() != "int":
+            return None,EvaluatorException("InvokeRndError: Parameter 0 expected type INT, got: " + node.parameters[0].__str__())
+        max = node.parameters[0].value
+    else:
+        if node.parameters[0].__type__() != "int":
+            return None,EvaluatorException("InvokeRndError: Parameter 0 expected type INT, got: " + node.parameters[0].__str__())
+        min = node.parameters[0].value
+
+        if node.parameters[1].__type__() != "int":
+            return None,EvaluatorException("InvokeRndError: Parameter 0 expected type INT, got: " + node.parameters[0].__str__())
+        max = node.parameters[1].value
+
+    return assign_type(random.randint(min,max)), None
+
+
+def handle_round(node : InvokeNode, environment : Environment) -> Object and Exception:
+    if len(node.parameters) != 2:
+        return None, EvaluatorException("InvokeRoundError: Expected parameter length 2, got: " + str(len(node.parameters)))
+
+    if node.parameters[0].__type__() not in ("float", "int"):
+        return None, EvaluatorException("InvokeRoundError: Expected parameter 1 type INT or FLOAT, got: " + node.parameters[0].__type__())
+
+    if node.parameters[1].__type__() != "int":
+        return None, EvaluatorException("InvokeRoundError: Expected parameter 1 type INT, got: " + node.parameters[0].__type__())
+    
+    return assign_type(round(node.parameters[0].value, node.parameters[1].value)), None
+
+
+
+
+def handle_float(node : InvokeNode, environment : Environment) -> Object and Exception:
+    if len(node.parameters) != 1:
+        return None,EvaluatorException("InvokeFloatError: Expected parameter length 1, got: " + str(len(node.parameters)))
+
+    try:
+        return assign_type(float(node.parameters[0].value)), None
+    except:
+        return None, EvaluatorException("InvokeFloatError: Cannot Convert Type: " + node.parameters[0].__type__() + " to float")
+
+def handle_int(node : InvokeNode, environment : Environment) -> Object and Exception:
+    if len(node.parameters) != 1:
+        return None,EvaluatorException("InvokeIntError: Expected parameter length 1, got: " + str(len(node.parameters)))
+
+    try:
+        return assign_type(int(node.parameters[0].value)), None
+    except:
+        return None, EvaluatorException("InvokeIntError: Cannot Convert Type: " + node.parameters[0].__type__() + " to int")
+
+def handle_string(node : InvokeNode, environment : Environment) -> Object and Exception:
+    if len(node.parameters) != 1:
+        return None,EvaluatorException("InvokeStringError: Expected parameter length 1, got: " + str(len(node.parameters)))
+
+    try:
+        return assign_type(str(node.parameters[0].value)), None
+    except:
+        return None, EvaluatorException("InvokeStringError: Cannot Convert Type: " + node.parameters[0].__type__() + " to string")

@@ -1,3 +1,5 @@
+print(round(10.252,1));
+
 for (int i => range(10)) {
     print(i);
 }

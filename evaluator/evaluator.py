@@ -58,8 +58,8 @@ def eval_invoke(invoke : InvokeNode, environment : Environment) -> Object and Ex
         pass
     elif invoke.identifier in environment.functions:
         return environment.functions[invoke.identifier](InvokeNode(invoke.identifier, parameters),environment)
-    else:
-        return None, EvaluatorException("InvokeFunctionError: Undefined Function: " + invoke.identifier)
+
+    return None, EvaluatorException("InvokeFunctionError: Undefined Function: " + invoke.identifier)
         
 
 def eval_for(fornode : ForNode, environment : Environment) -> Object and Exception:
@@ -113,7 +113,7 @@ def eval_if(ifnode : IfNode, environment : Environment) -> Object and Exception:
     satisfied = False
     i = 0
     #Loop through all elif's untill one is satisfied
-    while not satisfied:
+    while not satisfied and i < len(ifnode.conditions):
         #TODO: CHECK FOR RETURN
         res, err, satisfied= eval_conditional(ifnode.conditions[i], environment)
         if err != None: return None, err
