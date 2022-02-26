@@ -1,8 +1,26 @@
-int numberA = 10;
+float numberA = 10.0;
 bool running = true;
-string[] strings = ["hello", "world"];
+[]string strings = ["hello", "world"];
 global float numberB = 10.5;
 numberA = numberA + numberB;
+
+[]error errors = [];
+[][]string s = [["A"],["B"]];
+
+errors = [];
+
+[]int ints = [];
+
+for (int i => []) {
+    print(i);
+}
+
+for ([]string strArray => s) {
+    print(strArray);
+    for (string s => strArray) {
+        print(s);
+    }
+}
 
 if (numberA > 100 && numberA < 1000) {
     print("LARGER");

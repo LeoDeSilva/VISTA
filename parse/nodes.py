@@ -36,45 +36,72 @@ class AssignNode(Node):
         return "(" + self.scope + " " + self.identifier + " = " + self.expression.__str__() + ")"
 
 class InitialiseNode(Node):
-    def __init__(self, scope : str, type : Type, identifier : str, expression : Node, parameters : List[Node] = None) -> None:
+    def __init__(self, scope : str, type : str, identifier : str, expression : Node, parameters : List[Node] = None) -> None:
         super().__init__(INITIALISE)
         self.scope = scope
-        self.type = type
+        self.var_type = type
         self.identifier = identifier
         self.expression = expression
         self.parameters = parameters
 
     def __str__(self) -> str:
-        return "(" + self.scope + " " + self.type.__str__() + " " + self.identifier + "=" + self.expression.__str__() + ")"
+        return "(" + self.scope + " " + self.type + " " +  self.identifier + (("(" + ",".join([p.__str__() for p in self.parameters]) + ")") if self.parameters != None else "") + " = " + self.expression.__str__() + ")"
 
-class Condition(Node):
+class ConditionNode(Node):
     def __init__(self, seperator : str, condition : Node) -> None:
-        super().__init__(Condition)
+        super().__init__(ConditionNode)
         self.seperator = seperator
         self.condition = condition
 
     def __str__(self) -> str:
         return "(" + self.seperator + " " + self.condition.__str__()  + ")"
 
-class Conditional(Node):
-    def __init__(self, conditions : List[Condition], consequence : ProgramNode) -> None:
+class ConditionalNode(Node):
+    def __init__(self, conditions : List[ConditionNode], consequence : ProgramNode) -> None:
         super().__init__(CONDITIONAL)
         self.conditions = conditions
         self.consequence = consequence
 
     def __str__(self) -> str:
-        return  "(" + ",".join([condition.__str__() for condition in self.conditions]) + ")" + " -> " + self.consequence.__str__() 
+        return  "(" + ",".join([condition.__str__() for condition in self.conditions]) + ")" + "\n\t => " + self.consequence.__str__() 
 
 class IfNode(Node):
-    def __init__(self, conditions : List[Conditional]) -> None:
+    def __init__(self, conditions : List[ConditionalNode]) -> None:
         super().__init__(IF)
         self.conditions = conditions
 
     def __str__(self) -> str:
-        return "(" + "\n".join([condition.__str__() for condition in self.conditions]) + ")"
+        return "IF: \n =>" + "\n =>".join([condition.__str__() for condition in self.conditions]) + ")"
+
+class WhileNode(Node):
+    def __init__(self, conditional : ConditionalNode) -> None:
+        super().__init__(WHILE)
+        self.conditional = conditional
+
+    def __str__(self) -> str:
+        return "WHILE (" + self.conditional.__str__() + ")"
+
+class ForNode(Node):
+    def __init__(self, type : str, identifier : str, expression : Node ,consequence : ProgramNode) -> None:
+        super().__init__(FOR)
+        self.var_type = type
+        self.identifier = identifier
+        self.expression = expression
+        self.consequence = consequence
+
+    def __str__(self) -> str:
+        return "FOR (" + self.var_type + " " + self.identifier + " => " + self.expression.__str__() + " { " + self.consequence.__str__() + " })"
+
+class ReturnNode(Node):
+    def __init__(self, expression) -> None:
+        super().__init__(RETURN)
+        self.expression = expression
+    
+    def __str__(self) -> str:
+        return "RETURN " + self.expression.__str__()
 
 
-class BinaryOp(Node):
+class BinaryOperationNode(Node):
     def __init__(self, left : Node, op : str, right : Node) -> None:
         super().__init__(BIN_OP)
         self.left = left
@@ -85,9 +112,9 @@ class BinaryOp(Node):
         return "(" + self.left.__str__() + " " + self.op + " " + self.right.__str__() + ")"
 
 
-class UnaryOp(Node):
+class UnaryOperationNode(Node):
     def __init__(self, op : str, right : Node) -> None:
-        super().__init__(type)
+        super().__init__(UNARY_OP)
         self.op = op
         self.right = right
 
@@ -157,3 +184,20 @@ class BoolNode(AtomNode):
         if self.value == 1:
             return "true"
         return "false" 
+
+class ParameterNode(AtomNode):
+    def __init__(self, type : str, identifier : str) -> None:
+        super().__init__(type)
+        self.type = type
+        self.identifier = identifier
+
+    def __str__(self) -> str:
+        return self.type + " : " + self.identifier
+
+class FlagNode(Node):
+    def __init__(self, option : str) -> None:
+        super().__init__(FLAG)
+        self.option = option
+
+    def __str__(self) -> str:
+        return "FLAG : " + self.option

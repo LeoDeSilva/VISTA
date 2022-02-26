@@ -4,14 +4,18 @@ ERROR = "ERROR"
 LOCAL = "LOCAL"
 GLOBAL = "GLOBAL"
 CONDITIONAL = "CONDITIONAL"
+FLAG = "FLAG"
+COMMENT = "COMMENT"
 
 PROGRAM = "PROGRAM"
+FUNCTION = "FUNCTION"
 INITIALISE = "INITIALISE"
 ASSIGN = "ASSIGN"
 BIN_OP = "BIN_OP"
 UNARY_OP = "UNARY_OP"
 INVOKE = "INVOKE"
 
+PARAMETER = "PARAMETER"
 IDENTIFIER = "IDENTIFIER"
 NUMBER     = "NUMBER"
 TYPE = "TYPE"
@@ -78,9 +82,13 @@ class Token:
         return self.type + " : " + self.literal
 
 class Type(Token):
-    def __init__(self, primary_type: str,literal: str, secondary_type : str = None)  -> None:
-        super().__init__(TYPE, literal)
+    def __init__(self, primary_type: str,literal: str)  -> None:
+        super().__init__(IDENTIFIER, literal)
         self.primary_type = primary_type
+
+class ArrayType(Type):
+    def __init__(self, secondary_type: str, literal: str) -> None:
+        super().__init__(ARRAY, literal)
         self.secondary_type = secondary_type
 
 types = {
@@ -92,8 +100,6 @@ types = {
 }
 
 keywords = {
-    "true": TRUE,
-    "false":FALSE,
 	"if":     IF,
     "elif": ELIF,
     "else": ELSE,
@@ -109,9 +115,8 @@ def lookup_identifier(identifier : str) -> Token and Exception:
         return None, LexerException("LookupIdentifier: Expected String Length > 0") 
 
     if identifier in keywords:
-        return  Token(keywords[identifier], identifier), None
-
-    if identifier in types:
-        return Type(types[identifier],identifier), None
+        return Token(keywords[identifier], identifier), None
+    # elif identifier in types:
+    #     return Type(identifier, types[identifier]), None
 
     return Token(IDENTIFIER, identifier), None

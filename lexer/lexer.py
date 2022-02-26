@@ -1,5 +1,10 @@
+from multiprocessing.dummy import Array
+from tracemalloc import start
 from typing import List, Dict
+
+from idna import valid_contextj
 from lexer.token import *
+from parse.nodes import IdentifierNode
 
 
 LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_"
@@ -12,19 +17,37 @@ class Lexer:
         self.readPosition = 1
         self.char = self.program[self.position]
 
-    def advance(self) -> None:
+    def advance(self, inc : int = 1) -> None:
         if self.readPosition >= len(self.program):
             self.char = ""
         else:
             self.char = self.program[self.readPosition]
 
         self.position = self.readPosition
-        self.readPosition += 1
+        self.readPosition += inc
 
-    def peek(self) -> str:
-        if self.readPosition >= len(self.program):
+    def retreat_until(self, char : str) -> None:
+        while self.char != char:
+            self.retreat()
+
+    def retreat(self, inc : int = 1) -> None:
+        if self.position - inc < 0:
+            self.char = ""
+        else:
+            self.char = self.program[self.position - inc]
+        
+        self.position -= inc
+        self.readPosition -= inc
+
+    def reset(self, pos : int) -> None:
+        self.position = pos
+        self.readPosition = pos + 1
+        self.char = self.program[self.position]
+
+    def peek(self, inc : int = 0) -> str:
+        if self.readPosition + inc >= len(self.program):
             return ""
-        return self.program[self.readPosition]
+        return self.program[self.readPosition + inc]
 
 
     def lex(self) -> List[Token] and Exception:
@@ -48,6 +71,7 @@ class Lexer:
             token = Token(MUL, self.char)
         elif self.char == "/":
             token = Token(DIV, self.char)
+            token,err = self.lex_double(DIV,{"/":COMMENT})
         elif self.char == "%":
             token = Token(MOD, self.char)
         elif self.char == "^":
@@ -69,7 +93,8 @@ class Lexer:
         elif self.char == "}":
             token = Token(RBRACE, self.char)
         elif self.char == "[":
-            token = Token(LSQUARE, self.char)
+            token, err = self.lex_type()
+            if err != None: return None, err
         elif self.char == "]":
             token = Token(RSQUARE, self.char)
 
@@ -116,6 +141,36 @@ class Lexer:
         self.advance()
         return token, None
 
+    def valid_type(self, type) -> bool:
+        if len(type) < 3:
+            return False
+        i = 0
+        while i < len(type):
+            letter = type[i]
+            if letter == "[":
+                if type[i+1] != "]":
+                    return False
+                i+=1
+            elif letter not in LETTERS:
+                return False
+            i+=1
+        return True
+
+    def lex_type(self) -> Token and Exception:
+        start_pos = self.position
+        while self.char in ("[]") or self.char in LETTERS:
+            self.advance()
+
+        identifier = self.program[start_pos:self.position]
+        self.retreat()
+
+        if not self.valid_type(identifier):
+            self.reset(start_pos)
+            return Token(LSQUARE, "["), None
+
+        return Token(IDENTIFIER, identifier), None
+
+        
     def consume_whitespace(self) -> None:
         while self.char in (" ", "\t", "\r", "\n"):
             self.advance()
@@ -165,13 +220,6 @@ class Lexer:
         identifier = self.program[position:self.position]
         token, err = lookup_identifier(identifier)
         if err != None: return None, err
-
-        if token.type == TYPE and self.char == "[":
-            self.advance()
-            if self.char != "]":
-                return None, LexerException("Lex_Identifier: Expected TOKEN ']'")
-            self.advance()
-            return Type(ARRAY, token.literal + "[]", token.primary_type), None
 
         return token, None
 

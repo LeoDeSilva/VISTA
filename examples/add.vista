@@ -1,4 +1,40 @@
-(10+10/2)-"Hello World";
-10+10.3;
-print(10,100,10+10/2);
-[1,2,3];
+10 + 10;
+5 - 1;
+"Hello " + "World";
+10.2 + 10;
+-10 - 5;
+!0;
+10 % 2;
+(1+2)*2;
+true;
+!false;
+!true;
+
+int a = 10;
+a + 3;
+
+global string b = "hello world";
+b;
+
+[]int i = [1,2,3];
+i;
+
+[][]float f = [[1.0], [1.0]];
+f;
+
+a = 10;
+a;
+string s = "hello world";
+s;
+
+int add(int a, int b) {
+    return a + b; 
+}
+
+a == 10;
+
+if (a == 10 && s == "hello world") {
+    a = 15;
+}
+
+a;
