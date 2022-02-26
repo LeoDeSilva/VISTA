@@ -7,8 +7,8 @@ Programming language designed for 2D graphics (based off of PyGame)
 
 newWindow(500,500);
 
-global []int pos = [250, 250];
-global []int prev = pos;
+[]int pos = [250, 250];
+[]int prev = pos;
 
 []int offset() {
     return [rnd(-100,100), rnd(-100,100)];
