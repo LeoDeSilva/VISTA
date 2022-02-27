@@ -1,4 +1,4 @@
-from os import environ
+from unittest import result
 from evaluator.objects import *
 from lexer.token import *
 from parse.nodes import *
@@ -30,6 +30,8 @@ def eval(node : Node, environment : Environment) -> Object and Exception:
         return eval_for(node, environment)
     elif node.type == INVOKE:
         return eval_invoke(node, environment)
+    elif node.type == RETURN:
+        return eval_return(node, environment)
         
     elif node.type == INT:
         return Int(node.value), None
@@ -45,6 +47,11 @@ def eval(node : Node, environment : Environment) -> Object and Exception:
     else:
         return None, EvaluatorException("UnexpectedNode: " + node.__str__())
 
+def eval_return(returnnode : ReturnNode, environment : Environment) -> Object and Exception:
+    expression, err = eval(returnnode.expression, environment)
+    if err != None: return None, err
+    return Return(expression), None
+
 def eval_invoke(invoke : InvokeNode, environment : Environment) -> Object and Exception:
     parameters = []
     for param in invoke.parameters:
@@ -52,21 +59,42 @@ def eval_invoke(invoke : InvokeNode, environment : Environment) -> Object and Ex
         if err != None: return None, err
         parameters.append(param_expr)
 
-    if invoke.identifier in environment.locals:
-        pass
-    elif invoke.identifier in environment.globals:
-        pass
-    elif invoke.identifier in environment.functions:
-        return environment.functions[invoke.identifier](InvokeNode(invoke.identifier, parameters),environment)
+    local_environment = new_environment()
+    local_environment.globals = environment.locals
 
-    return None, EvaluatorException("InvokeFunctionError: Undefined Function: " + invoke.identifier)
+    if invoke.identifier in environment.functions:
+        return environment.functions[invoke.identifier](InvokeNode(invoke.identifier, parameters),local_environment)
+
+    if invoke.identifier in environment.locals:
+        function = environment.locals[invoke.identifier]
+    elif invoke.identifier in environment.globals:
+        function = environment.globals[invoke.identifier]
+    else:
+        return None, EvaluatorException("InvokeFunctionError: Undefined Function: " + invoke.identifier)
+
+    if function.type != FUNCTION:
+        return None, EvaluatorException("InvokeFunctionError: Identifier: " + invoke.identifier + " Not type FUNCTION")
+    for i,param_node in enumerate(function.parameters):
+        if param_node.var_type != parameters[i].__type__():
+            return None, EvaluatorException("InvokeFunctionError: Expected parameter " + str(i) + " type " + str(param_node.var_type) + " got: " + parameters[i].__type__())
+        local_environment.locals[param_node.identifier] = parameters[i]
+    result, err = eval(function.consequence, local_environment)
+    if err != None: return None, err
+
+    if result.type == RETURN:
+        return result.expression, None
+    elif result.__type__() != function.func_type:
+        return None, EvaluatorException("InvokeFunctionError: Expected Return Type : " + function.func_type + " got: " + result.__type__())
+
+    
+    return result, None
         
 
 def eval_for(fornode : ForNode, environment : Environment) -> Object and Exception:
     array, err = eval(fornode.expression, environment)
     if err != None: return None, err
     if array.type not in (ARRAY, STRING):
-        return EvaluatorException("ForNodeError: Expected Expression Type ARRAY or STRING, got: " + array.__str__())
+        return None, EvaluatorException("ForNodeError: Expected Expression Type ARRAY or STRING, got: " + array.__str__())
      
     i = 0
     while i < len(array.value):
@@ -75,9 +103,9 @@ def eval_for(fornode : ForNode, environment : Environment) -> Object and Excepti
             return None, EvaluatorException("ForNodeError: Expected Node Type: " + fornode.var_type + " got: " + expr.__type__()) 
         
         environment.locals[fornode.identifier] = expr
-        _, err = eval(fornode.consequence, environment)
+        result, err = eval(fornode.consequence, environment)
         if err != None: return None, err
-        #TODO: CHECK RETURN
+        if result.type == RETURN: return result, None
         i+=1
     
     return Null(), None
@@ -103,9 +131,10 @@ def eval_conditional(node : IfNode, environment : Environment) -> Object and Exc
     if err != None: return None, err, False
 
     if satisfied:
-        res, err = eval(node.consequence, environment)
+        result, err = eval(node.consequence, environment)
         if err != None: return None, err, True
-        return res, None, True
+        if result.type == RETURN: return result, None, True
+        return Null(), None, True
 
     return Null(), None, False
 
@@ -114,9 +143,9 @@ def eval_if(ifnode : IfNode, environment : Environment) -> Object and Exception:
     i = 0
     #Loop through all elif's untill one is satisfied
     while not satisfied and i < len(ifnode.conditions):
-        #TODO: CHECK FOR RETURN
-        res, err, satisfied= eval_conditional(ifnode.conditions[i], environment)
+        result, err, satisfied= eval_conditional(ifnode.conditions[i], environment)
         if err != None: return None, err
+        if result.type == RETURN: return result, None
         i += 1
     return Null(), None
 
@@ -124,8 +153,9 @@ def eval_while(whilenode : WhileNode, environment : Environment) -> Object and E
     satisfied = True
     i = 0
     while satisfied:
-        res, err, satisfied = eval_conditional(whilenode.conditional, environment)
+        result, err, satisfied = eval_conditional(whilenode.conditional, environment)
         if err != None: return None, err
+        if result.type == RETURN: return result, None
         i += 1
     return Null(), None
 
@@ -224,7 +254,9 @@ def eval_program(program : ProgramNode, environment : Environment) -> Object and
     for node in program.nodes:
         result, err = eval(node, environment)
         if err != None: return None, err
-        if result.type != NULL:
-            print(result)
+
+        if result.type == RETURN: 
+            return result, None
+        if result.type != NULL: print(result)
 
     return Null(), None

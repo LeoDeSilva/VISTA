@@ -27,6 +27,13 @@ class Null(Object):
     def __type__(self) -> str:
         return "null"
 
+class Return(Object):
+    def __init__(self, expression) -> None:
+        super().__init__(RETURN)
+        self.expression = expression
+
+    def __type__(self) -> str:
+        return "return"
 
 class BinaryOperation(Object):
     def __init__(self, left : Object, operation : str, right : Object) -> None:
@@ -36,8 +43,11 @@ class BinaryOperation(Object):
         self.right = right
 
 class FunctionDeclaration(Object):
-    def __init__(self, type : str, parameters : List[Node], consequence : ProgramNode) -> None:
+    def __init__(self, func_type : str, parameters : List[Node], consequence : ProgramNode) -> None:
         super().__init__(FUNCTION)
+        self.func_type = func_type 
+        self.parameters = parameters
+        self.consequence = consequence
 
     def __type__(self) -> str:
         return self.type

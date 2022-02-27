@@ -186,9 +186,9 @@ class BoolNode(AtomNode):
         return "false" 
 
 class ParameterNode(AtomNode):
-    def __init__(self, type : str, identifier : str) -> None:
-        super().__init__(type)
-        self.type = type
+    def __init__(self, var_type : str, identifier : str) -> None:
+        super().__init__(PARAMETER)
+        self.var_type = var_type
         self.identifier = identifier
 
     def __str__(self) -> str:

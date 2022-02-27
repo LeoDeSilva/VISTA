@@ -32,3 +32,22 @@ if (numberA > 100 && numberA < 1000) {
 } else {
     print("SMALLER");
 }
+
+
+print(round(10.252,1));
+
+for (int i => range(10)) {
+    print(i);
+}
+
+for (string s => ["a","b","c"]) {
+    print(s);
+}
+
+for (string s => "Hello World") {
+    print(s);
+}
+
+for ([]int a => [[1],[2]]) {
+    print(a);
+}

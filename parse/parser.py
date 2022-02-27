@@ -175,7 +175,7 @@ class Parser:
         self.advance()
         consequence, err = self.parse_consequence()
         if err != None: return ErrorNode, err
-        return InitialiseNode(GLOBAL, node_type, identifier, ProgramNode(consequence), params), None
+        return InitialiseNode(LOCAL, node_type, identifier, ProgramNode(consequence), params), None
 
     # ( type ID , type ID )
     def parse_params(self) -> List[Node] and Exception:
