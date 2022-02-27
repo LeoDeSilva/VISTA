@@ -124,7 +124,20 @@ class Float(Factor):
 class Array(Factor):
     def __init__(self, expressions) -> None:
         super().__init__(ARRAY, expressions)
+
+    def index(self,index : int) -> Object and Exception:
+        if index >= len(self.value):
+            return None, EvaluatorException("IndexError: Index Out Of Range: " + str(index) + " Length: " + str(len(self.value) - 1))
+
+        return self.value[index], None
     
+    def replace(self, index : int, value : Object) -> Object and Exception:
+        if index >= len(self.value):
+            return None, EvaluatorException("IndexError: Index Out Of Range: " + str(index) + " Length: " + str(len(self.value) - 1))
+
+        # self.value[index] = value
+        return Array(self.value[:index] + [value] + self.value[index+1:]), None
+
     def __str__(self) -> str:
         return "[" + ",".join([node.__str__() for node in self.value]) + "]"
 
@@ -162,6 +175,9 @@ def new_environment() -> Environment:
             "string":handle_string,
 
             "round":handle_round,
+            "append":handle_append,
+            "remove":handle_remove,
+            "insert":handle_insert,
         },
     )
 
@@ -292,8 +308,48 @@ def handle_round(node : InvokeNode, environment : Environment) -> Object and Exc
     
     return assign_type(round(node.parameters[0].value, node.parameters[1].value)), None
 
+# List methods
 
+def handle_append(node : InvokeNode, environment : Environment) -> Object and Exception:
+    if len(node.parameters) != 2:
+        return None, EvaluatorException("InvokeAppendError: Expected parameter length 2, got: " + str(len(node.parameters)))
 
+    if node.parameters[0].type != ARRAY:
+        return None, EvaluatorException("InvokeAppendError: Expected parameter 1 type ARRAY, got: " + node.parameters[0].__type__())  
+
+    return Array(node.parameters[0].value + [node.parameters[1]]), None
+
+def handle_remove(node : InvokeNode, environment : Environment) -> Object and Exception:
+    if len(node.parameters) != 2:
+        return None, EvaluatorException("InvokeAppendError: Expected parameter length 2, got: " + str(len(node.parameters)))
+
+    if node.parameters[0].type != ARRAY:
+        return None, EvaluatorException("InvokeAppendError: Expected parameter 1 type ARRAY, got: " + node.parameters[0].__type__())  
+
+    if node.parameters[1].type != INT:
+        return None, EvaluatorException("InvokeAppendError: Expected parameter 1 type INT, got: " + node.parameters[0].__type__())  
+
+    index = node.parameters[1].value 
+    array = node.parameters[0].value
+
+    return Array(array[:index] + array[index + 1:]), None
+
+def handle_insert(node : InvokeNode, environment : Environment) -> Object and Exception:
+    if len(node.parameters) != 3:
+        return None, EvaluatorException("InvokeAppendError: Expected parameter length 3, got: " + str(len(node.parameters)))
+
+    if node.parameters[0].type != ARRAY:
+        return None, EvaluatorException("InvokeAppendError: Expected parameter 1 type ARRAY, got: " + node.parameters[0].__type__())  
+
+    if node.parameters[1].type != INT:
+        return None, EvaluatorException("InvokeAppendError: Expected parameter 1 type INT, got: " + node.parameters[0].__type__())  
+
+    index = node.parameters[1].value 
+    array = node.parameters[0].value
+
+    return Array(array[:index] + [node.parameters[2]] +  array[index:]), None
+
+# Type checks
 
 def handle_float(node : InvokeNode, environment : Environment) -> Object and Exception:
     if len(node.parameters) != 1:
@@ -321,3 +377,4 @@ def handle_string(node : InvokeNode, environment : Environment) -> Object and Ex
         return assign_type(str(node.parameters[0].value)), None
     except:
         return None, EvaluatorException("InvokeStringError: Cannot Convert Type: " + node.parameters[0].__type__() + " to string")
+

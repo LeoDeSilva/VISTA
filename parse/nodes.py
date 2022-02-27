@@ -24,7 +24,6 @@ class ProgramNode(Node):
     def __str__(self) -> str:
         return "[" + ",".join([node.__str__() for node in self.nodes]) + "]"
 
-
 class AssignNode(Node):
     def __init__(self, scope : str , identifier : str, expression : Node) -> None:
         super().__init__(ASSIGN)
@@ -33,7 +32,7 @@ class AssignNode(Node):
         self.expression = expression
 
     def __str__(self) -> str:
-        return "(" + self.scope + " " + self.identifier + " = " + self.expression.__str__() + ")"
+        return "(" + self.scope + " " + self.identifier.__str__() + " = " + self.expression.__str__() + ")"
 
 class InitialiseNode(Node):
     def __init__(self, scope : str, type : str, identifier : str, expression : Node, parameters : List[Node] = None) -> None:
@@ -142,6 +141,16 @@ class ArrayNode(AtomNode):
 
     def __str__(self) -> str:
         return "[" + ",".join([node.__str__() for node in self.nodes]) + "]"
+
+class IndexNode(AtomNode):
+    def __init__(self, array : Node, index : Node) -> None:
+        super().__init__(INDEX)
+        self.array = array
+        self.index = index
+
+    def __str__(self) -> str:
+        return self.array.__str__() + "[" + str(self.index) + "]"
+
 
 class IdentifierNode(AtomNode):
     def __init__(self, identifier : str) -> None:

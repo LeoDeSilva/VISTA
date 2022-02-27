@@ -39,13 +39,13 @@ class Parser:
 
     def parse_expression(self) -> Node and Exception:
         if self.token.type == IDENTIFIER and self.peek().type == EQ:
-            return self.parse_assign(LOCAL)
+            return self.parse_assign(LOCAL, self.token)
 
         elif self.token.type == GLOBAL:
             self.advance()
             if self.token.type == IDENTIFIER and self.peek().type == IDENTIFIER:
                 return self.parse_init(GLOBAL)
-            return self.parse_assign(GLOBAL)
+            return self.parse_assign(GLOBAL, self.token)
 
         elif self.token.type == IDENTIFIER and self.peek().type == IDENTIFIER:
             return self.parse_init(LOCAL)
@@ -143,8 +143,7 @@ class Parser:
 
         return IfNode(conditions), None
 
-    def parse_assign(self, scope : str) -> Node and Exception:
-        identifier = self.token.literal
+    def parse_assign(self, scope : str, identifier : Node) -> Node and Exception:
         if self.advance().type != EQ: return None, ParserException("SyntaxError: Expected = After Assign Indentifier : " + identifier)
         self.advance()
         expr, err = self.parse_expr(0)
@@ -305,6 +304,21 @@ class Parser:
         return UnaryOperationNode(operation, expression), None
 
     def parse_postfix(self, node : Node) -> Node and Exception:
+        if self.token.type == LSQUARE:
+            self.advance()
+            expr, err = self.parse_expr(0)
+            if err != None: return None, err
+            if self.token.type != RSQUARE:
+                return None,ParserException("SyntaxError: Expected closing RPAREN after indexing array, " + node.__str__() + "[" + expr.__str__())
+            self.advance()
+
+            if self.token.type == EQ:
+                self.advance()
+                expression, err = self.parse_expr(0)
+                if err != None: return None, err
+                return AssignNode(NULL, IndexNode(node,expr), expression), None
+
+            return self.parse_postfix(IndexNode(node, expr))
         return node, None
 
     def parse_infix(self, left : Node, operation : str) -> Node and Exception:

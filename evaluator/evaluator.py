@@ -1,4 +1,3 @@
-from unittest import result
 from evaluator.objects import *
 from lexer.token import *
 from parse.nodes import *
@@ -43,9 +42,24 @@ def eval(node : Node, environment : Environment) -> Object and Exception:
         return eval_array(node, environment)
     elif node.type == BOOL:
         return Boolean(node.value), None
+    elif node.type == INDEX:
+        return eval_index(node, environment)
     
     else:
         return None, EvaluatorException("UnexpectedNode: " + node.__str__())
+
+def eval_index(index : IndexNode, environment :  Environment) -> Object and Exception:
+    array, err = eval(index.array, environment)
+    if err != None: return None, err
+    if array.type != ARRAY:
+        return None,EvaluatorException("IndexError: Cannot Index: " + array.__str__() + " Expected Type ARRAY")
+
+    index_expr, err = eval(index.index, environment)
+    if err != None: return None
+    if index_expr.type != INT:
+        return None, EvaluatorException("IndexError: Index must be of type INT, got: " + index_expr.__str__())
+    
+    return array.index(index_expr.value)
 
 def eval_return(returnnode : ReturnNode, environment : Environment) -> Object and Exception:
     expression, err = eval(returnnode.expression, environment)
@@ -62,22 +76,25 @@ def eval_invoke(invoke : InvokeNode, environment : Environment) -> Object and Ex
     local_environment = new_environment()
     local_environment.globals = environment.locals
 
-    if invoke.identifier in environment.functions:
-        return environment.functions[invoke.identifier](InvokeNode(invoke.identifier, parameters),local_environment)
 
     if invoke.identifier in environment.locals:
         function = environment.locals[invoke.identifier]
     elif invoke.identifier in environment.globals:
         function = environment.globals[invoke.identifier]
+    elif invoke.identifier in environment.functions:
+        return environment.functions[invoke.identifier](InvokeNode(invoke.identifier, parameters),local_environment)
     else:
         return None, EvaluatorException("InvokeFunctionError: Undefined Function: " + invoke.identifier)
 
     if function.type != FUNCTION:
         return None, EvaluatorException("InvokeFunctionError: Identifier: " + invoke.identifier + " Not type FUNCTION")
+
     for i,param_node in enumerate(function.parameters):
         if param_node.var_type != parameters[i].__type__():
             return None, EvaluatorException("InvokeFunctionError: Expected parameter " + str(i) + " type " + str(param_node.var_type) + " got: " + parameters[i].__type__())
+
         local_environment.locals[param_node.identifier] = parameters[i]
+
     result, err = eval(function.consequence, local_environment)
     if err != None: return None, err
 
@@ -171,9 +188,79 @@ def eval_array(array : ArrayNode, environment : Environment) -> Object and Excep
         exprs.append(node_expr)
     return Array(exprs), None
 
+
+def base_array(node : Node, environment : Environment) -> Object and Object and str and Exception:
+    # Return base array
+    array = node
+    while array.type == INDEX: 
+        array = array.array
+
+    # Index, each prev index is wrapped in next index, reversing order
+    prev_index = array
+    cur_node = node
+    while cur_node.type == INDEX:
+        prev_index = IndexNode(prev_index, cur_node.index)
+        cur_node = cur_node.array
+    
+    identifier = array.identifier if array.type == IDENTIFIER else ""
+
+    base, err = eval(array, environment)
+    if err != None: return None, None, None, err
+
+    if base.type != ARRAY:
+        return None, None, None, EvaluatorException("IndexError: cannot index: " + base.__str__() + " expected type ARRAY, got: " + base.type)
+
+    return base, prev_index, identifier, None
+
+
+def replace(base : Object, node : Object, index : int, value : Object, environment : Environment) -> Object and Exception:
+    # If not bottom level index (has acess to base array), replace this index with the replaced version of sub array
+    if node.type == INDEX and node.array.type == INDEX:
+        # because replacing the next array needs next index
+        next_index, err = eval(node.array.index, environment)
+        if err != None: return None, err
+
+        # The array to be replaced is the index of this array e.g. [[1,2]][0] = [1,2]
+        next_array, err = base.index(index)
+        if err != None: return None, err
+
+        # the replaced version of the next_array e.g. [10,2][0] = -1  => [0,2]
+        replaced, err = replace(next_array, node.array, next_index.value, value, environment)
+        if err != None: return None, err
+
+        # Replace the index to be changed with modified sub array
+        return base.replace(index, replaced)
+
+    elif node.type == INDEX:
+        # If lowest level index, just replace base array
+        return  base.replace(index,value)
+
+
 def eval_assign(assign : AssignNode, environment : Environment) -> Object and Exception:
+    assign.identifier = Token(IDENTIFIER, assign.identifier) if isinstance(assign.identifier, str) else assign.identifier
     expr, err = eval(assign.expression, environment)
     if err != None: return None, err
+
+    if assign.identifier.type == INDEX:
+        # Reverse order of indexes (otherwise wrong order), see if identifier and return base array
+        array, indices, identifier, err = base_array(assign.identifier, environment)
+        if err != None: return None, err
+
+        index, err = eval(indices.index, environment)
+        if err != None: return None, err
+
+        array, err = replace(array, indices, index.value, expr, environment)
+        if err != None: return None, err
+
+        expr = array
+
+        # If no identifier, return the replaced array, this lets [x,x,x][0] = 10 be used as an atom in expressions
+        if identifier == "":
+            return array, None
+        
+        assign.identifier = identifier
+    elif assign.identifier.type == IDENTIFIER:
+        assign.identifier = assign.identifier.literal 
 
     if assign.identifier in environment.locals: 
         node = environment.locals[assign.identifier]
@@ -188,7 +275,7 @@ def eval_assign(assign : AssignNode, environment : Environment) -> Object and Ex
         environment.globals[assign.identifier] = expr
 
     else:
-        return None, EvaluatorException("UndefinedVariable: " + assign.identifier)
+        return None, EvaluatorException("UndefinedVariable: " + assign.identifier.literal)
     
     return Null(), None
     
@@ -257,6 +344,6 @@ def eval_program(program : ProgramNode, environment : Environment) -> Object and
 
         if result.type == RETURN: 
             return result, None
-        if result.type != NULL: print(result)
+        # if result.type != NULL: print(result)
 
     return Null(), None
