@@ -1,0 +1,23 @@
+load pygame; 
+
+newWindow(500,500);
+
+[]float position = [0.0,250.0];
+[]int RED = [255,0,0];
+
+int clamp(float value, int min, int max) {
+    if (value < min) {
+        return min;
+    } elif (value > max) {
+        return max;
+    }
+    return value;
+}
+
+null update(){
+    clear([255,255,255]);
+    position[0] = clamp(position[0] + 0.5,0,450);
+    rect(position, [50,50], RED);
+}
+
+pygameInit();

@@ -1,0 +1,27 @@
+[]string tasks = [];
+
+null printTasks([]string tasks) {
+    int i = 0;
+    for (string task => tasks) {
+        print(i,task);
+        i = i + 1;
+    }
+}
+
+while (true) {
+    print("");
+    string choice = input(":");
+    if (choice == "q") {
+        break;
+    } elif (choice == "a") {
+        string title = input("Enter task name:");
+        tasks = append(tasks, title);
+        printTasks(tasks);
+    } elif (choice == "c") {
+        printTasks(tasks);
+        int id = int(input("Enter ID of task:"));
+        tasks = remove(tasks, id);
+    } elif (choice == "d") {
+        printTasks(tasks);
+    }
+}

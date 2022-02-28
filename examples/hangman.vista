@@ -1,0 +1,60 @@
+string randomWord([]string list) {
+    return list[rnd(length(list)) - 1];
+} 
+
+bool contained(string array, string element) {
+    for (string e => array) {
+        if (e == element) {
+            return true;
+        }
+    }
+    return false;
+}
+
+[]string wordList = [
+    "word",
+    "coding",
+    "computer",
+    "mathematics",
+    "spanish",
+    "hangman",
+    "america",
+    "war",
+    "russia",
+    "ukraine"
+];
+
+string choice = randomWord(wordList);
+string dashedGuess = "";
+
+for (int i => range(length(choice))) { 
+    dashedGuess = dashedGuess + "_"; 
+}
+
+int trials = 10;
+while (trials > 0) {
+    if (dashedGuess == choice) {
+        break;
+    } 
+
+    string guessedLetter = input(":");
+
+    if (contained(choice, guessedLetter)) {
+        for (int i => range(length(choice))) {
+            if (choice[i] == guessedLetter) {
+                dashedGuess[i] = guessedLetter;
+            }
+        }
+    } else {
+        trials = trials - 1;
+        print(guessedLetter, "was not in the word, you have",trials,"lives left");
+    }
+
+    print(dashedGuess);
+}
+
+if (trials == 0) {
+    print("You ran out of tries! The word was", choice);
+} else {
+    print("Correct, you had",trials,"guesses left!");
+}

@@ -1,0 +1,15 @@
+int answer = rnd(100) + 1;
+int guess = -1;
+int tries = 0;
+
+while (guess != answer) {
+    guess = int(input("Guess a number:"));
+    if (guess > answer) {
+        print("To high");
+    } elif (guess < answer) {
+        print("To low");
+    }
+    tries = tries + 1;
+}
+
+print("Correct, you took",tries,"tries");

@@ -44,14 +44,27 @@ def eval(node : Node, environment : Environment) -> Object and Exception:
         return Boolean(node.value), None
     elif node.type == INDEX:
         return eval_index(node, environment)
+    elif node.type == BREAK:
+        return node, None
+    elif node.type == FLAG:
+        environment.flags[node.option] = True
+        return Null(), None
+    elif node.type == LOAD:
+        return eval_load(node, environment)
     
     else:
         return None, EvaluatorException("UnexpectedNode: " + node.__str__())
 
+def eval_load(load : LoadNode, environment : Environment) -> Object and Exception:
+    if load.option == "pygame":
+        import modules.pygame_functions as pygame_functions
+        environment.functions.update(pygame_functions.extract_functions())
+    return Null(), None
+
 def eval_index(index : IndexNode, environment :  Environment) -> Object and Exception:
     array, err = eval(index.array, environment)
     if err != None: return None, err
-    if array.type != ARRAY:
+    if array.type not in (ARRAY, STRING):
         return None,EvaluatorException("IndexError: Cannot Index: " + array.__str__() + " Expected Type ARRAY")
 
     index_expr, err = eval(index.index, environment)
@@ -74,7 +87,10 @@ def eval_invoke(invoke : InvokeNode, environment : Environment) -> Object and Ex
         parameters.append(param_expr)
 
     local_environment = new_environment()
-    local_environment.globals = environment.locals
+    local_environment.globals = environment.globals
+    local_environment.locals = environment.locals
+    local_environment.externals = environment.externals
+    local_environment.functions = environment.functions
 
 
     if invoke.identifier in environment.locals:
@@ -82,7 +98,11 @@ def eval_invoke(invoke : InvokeNode, environment : Environment) -> Object and Ex
     elif invoke.identifier in environment.globals:
         function = environment.globals[invoke.identifier]
     elif invoke.identifier in environment.functions:
-        return environment.functions[invoke.identifier](InvokeNode(invoke.identifier, parameters),local_environment)
+        result, updated_env, err =  environment.functions[invoke.identifier](InvokeNode(invoke.identifier, parameters),local_environment)
+        if err != None: return None, err
+        environment.globals.update(updated_env.globals)
+        environment.externals.update(updated_env.externals)
+        return result, err
     else:
         return None, EvaluatorException("InvokeFunctionError: Undefined Function: " + invoke.identifier)
 
@@ -90,17 +110,19 @@ def eval_invoke(invoke : InvokeNode, environment : Environment) -> Object and Ex
         return None, EvaluatorException("InvokeFunctionError: Identifier: " + invoke.identifier + " Not type FUNCTION")
 
     for i,param_node in enumerate(function.parameters):
-        if param_node.var_type != parameters[i].__type__():
+        if not types_equal(param_node.var_type, parameters[i].__type__()):
             return None, EvaluatorException("InvokeFunctionError: Expected parameter " + str(i) + " type " + str(param_node.var_type) + " got: " + parameters[i].__type__())
 
         local_environment.locals[param_node.identifier] = parameters[i]
 
-    result, err = eval(function.consequence, local_environment)
+    result, updated_env, err = eval(function.consequence, local_environment)
     if err != None: return None, err
+    environment.globals.update(updated_env.globals)
+    environment.externals.update(updated_env.externals)
 
     if result.type == RETURN:
         return result.expression, None
-    elif result.__type__() != function.func_type:
+    elif not types_equal(function.func_type, result.__type__()):
         return None, EvaluatorException("InvokeFunctionError: Expected Return Type : " + function.func_type + " got: " + result.__type__())
 
     
@@ -116,13 +138,15 @@ def eval_for(fornode : ForNode, environment : Environment) -> Object and Excepti
     i = 0
     while i < len(array.value):
         expr = array.value[i] if not isinstance(array.value[i],str) else assign_type(array.value[i])
-        if expr.__type__() != fornode.var_type and expr.__type__() != "[]":
+        if not types_equal(fornode.var_type, expr.__type__()):
             return None, EvaluatorException("ForNodeError: Expected Node Type: " + fornode.var_type + " got: " + expr.__type__()) 
         
         environment.locals[fornode.identifier] = expr
-        result, err = eval(fornode.consequence, environment)
+        result, _, err = eval(fornode.consequence, environment)
         if err != None: return None, err
         if result.type == RETURN: return result, None
+        elif result.type == BREAK: break
+
         i+=1
     
     return Null(), None
@@ -144,16 +168,17 @@ def eval_conditions(conditionals : ConditionNode, environment : Environment) -> 
 
 # e.g. elif (10 == 10 && 2 != 3) { print("Hello World"); }, indidual clauses of if statement
 def eval_conditional(node : IfNode, environment : Environment) -> Object and Exception and bool:
+    result = Null()
     satisfied, err = eval_conditions(node.conditions, environment)
     if err != None: return None, err, False
 
     if satisfied:
-        result, err = eval(node.consequence, environment)
+        result, _, err = eval(node.consequence, environment)
         if err != None: return None, err, True
-        if result.type == RETURN: return result, None, True
-        return Null(), None, True
+        # if result.type == RETURN: return result, None, True
+        # return Null(), None, True
 
-    return Null(), None, False
+    return result, None, satisfied
 
 def eval_if(ifnode : IfNode, environment : Environment) -> Object and Exception:
     satisfied = False
@@ -162,7 +187,8 @@ def eval_if(ifnode : IfNode, environment : Environment) -> Object and Exception:
     while not satisfied and i < len(ifnode.conditions):
         result, err, satisfied= eval_conditional(ifnode.conditions[i], environment)
         if err != None: return None, err
-        if result.type == RETURN: return result, None
+        if result.type in (RETURN,BREAK): 
+            return result, None
         i += 1
     return Null(), None
 
@@ -173,6 +199,7 @@ def eval_while(whilenode : WhileNode, environment : Environment) -> Object and E
         result, err, satisfied = eval_conditional(whilenode.conditional, environment)
         if err != None: return None, err
         if result.type == RETURN: return result, None
+        if result.type == BREAK: break
         i += 1
     return Null(), None
 
@@ -207,7 +234,7 @@ def base_array(node : Node, environment : Environment) -> Object and Object and 
     base, err = eval(array, environment)
     if err != None: return None, None, None, err
 
-    if base.type != ARRAY:
+    if base.type not in (ARRAY, STRING):
         return None, None, None, EvaluatorException("IndexError: cannot index: " + base.__str__() + " expected type ARRAY, got: " + base.type)
 
     return base, prev_index, identifier, None
@@ -237,7 +264,7 @@ def replace(base : Object, node : Object, index : int, value : Object, environme
 
 
 def eval_assign(assign : AssignNode, environment : Environment) -> Object and Exception:
-    assign.identifier = Token(IDENTIFIER, assign.identifier) if isinstance(assign.identifier, str) else assign.identifier
+    # assign.identifier = Token(IDENTIFIER, assign.identifier) if isinstance(assign.identifier, str) else assign.identifier
     expr, err = eval(assign.expression, environment)
     if err != None: return None, err
 
@@ -258,26 +285,29 @@ def eval_assign(assign : AssignNode, environment : Environment) -> Object and Ex
         if identifier == "":
             return array, None
         
-        assign.identifier = identifier
+        assign_identifier = identifier
     elif assign.identifier.type == IDENTIFIER:
-        assign.identifier = assign.identifier.literal 
+        assign_identifier = assign.identifier.literal
+        
 
-    if assign.identifier in environment.locals: 
-        node = environment.locals[assign.identifier]
-        if node.__type__() != expr.__type__() and node.__type__() != "[]": 
-            return None, EvaluatorException("TypeError: " +expr.__str__() + " Of Type : " + expr.__type__() + " Does Not Equal Type : " + node.__type__())
-        environment.locals[assign.identifier] = expr
+    if assign_identifier in environment.locals: 
+        node = environment.locals[assign_identifier]
+        if not types_equal(node.__type__(), expr.__type__()): 
+            return None, EvaluatorException("TypeError: " +expr.__type__() + " Of Type : " + expr.__type__() + " Does Not Equal Type : " + node.__type__())
+        environment.locals[assign_identifier] = expr
 
-    elif assign.identifier in environment.globals:
-        node = environment.globals[assign.identifier]
-        if node.__type__() != expr.__type__() and node.__type__() != "[]": 
-            return None, EvaluatorException("TypeError: " +expr.__str__() + " Of Type : " + expr.__type__() + " Does Not Equal Type : " + node.__type__())
-        environment.globals[assign.identifier] = expr
+    elif assign_identifier in environment.globals:
+        node = environment.globals[assign_identifier]
+        if not types_equal(node.__type__(), expr.__type__()): 
+            return None, EvaluatorException("TypeError: " +expr.__type__() + " Of Type : " + expr.__type__() + " Does Not Equal Type : " + node.__type__())
+        environment.globals[assign_identifier] = expr
 
     else:
-        return None, EvaluatorException("UndefinedVariable: " + assign.identifier.literal)
+        return None, EvaluatorException("UndefinedVariable: " + assign_identifier)
     
     return Null(), None
+
+
     
 
 def eval_init(init : InitialiseNode, environment : Environment) -> Object and Exception:
@@ -294,7 +324,7 @@ def eval_init(init : InitialiseNode, environment : Environment) -> Object and Ex
     expr, err = eval(init.expression, environment)
     if err != None: return None, err
 
-    if expr.__type__() != init.var_type and expr.__type__() != "[]":
+    if not types_equal(init.var_type, expr.__type__()):
         return None, EvaluatorException("TypeError: " +expr.__str__() + " Of Type : " + expr.__type__() + " Does Not Equal Type : " + init.var_type)
     
     if init.scope == GLOBAL:
@@ -305,6 +335,9 @@ def eval_init(init : InitialiseNode, environment : Environment) -> Object and Ex
     return Null(), None
 
 def eval_identifier(identifier : IdentifierNode, environment : Environment) -> Object and Exception:
+    if identifier.identifier in environment.constants:
+        return environment.constants[identifier.identifier], None
+
     if identifier.identifier in environment.locals:
         return environment.locals[identifier.identifier], None
 
@@ -340,10 +373,13 @@ def eval_binop(binop : BinaryOperationNode, environment : Environment) -> Object
 def eval_program(program : ProgramNode, environment : Environment) -> Object and Exception:
     for node in program.nodes:
         result, err = eval(node, environment)
-        if err != None: return None, err
+        if err != None: return None, None, err
 
-        if result.type == RETURN: 
-            return result, None
+        if result.type in (RETURN, BREAK): 
+            return result, environment, None
         # if result.type != NULL: print(result)
 
-    return Null(), None
+    return Null(), environment, None
+
+def types_equal(left : Object, right : Object) -> bool:
+    return left == right or (left[:2] == right[:2] and left[:2] == "[]")

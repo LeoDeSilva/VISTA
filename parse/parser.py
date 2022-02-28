@@ -1,3 +1,4 @@
+from lib2to3.pgen2.token import SEMI
 from lexer.token import *
 from parse.nodes import *
 from typing import List
@@ -59,8 +60,14 @@ class Parser:
         elif self.token.type == RETURN:
             return self.parse_return()
 
+        elif self.token.type == BREAK:
+            return self.parse_break()
+
         elif self.token.type == WHILE:
             return self.parse_while()
+
+        elif self.token.type == LOAD:
+            return self.parse_load()
 
         elif self.token.type == NOT and self.peek().type == LSQUARE:
             return self.parse_flag()
@@ -71,6 +78,20 @@ class Parser:
 
     # Keyword Operations
 
+    def parse_load(self) -> Node and Exception:
+        if self.advance().type != IDENTIFIER:
+            return None, ParserException("SyntaxError: load statement, expected IDENTIFIER after load")
+        identifier = self.token.literal
+        self.advance()
+        return LoadNode(identifier), None
+
+
+    def parse_break(self) -> Node and Exception:
+        self.advance()
+        if self.token.type != SEMICOLON:
+            return None, ParserException("SyntaxError: break statement, expected SEMICOLON after keyword")
+        return BreakNode(), None
+
     def parse_flag(self) -> Node and Exception:
         if self.advance(2).type != IDENTIFIER: return None, ParserException("SyntaxError: FLAG Expected To Be Identifier")
         identifier = self.token.literal
@@ -80,6 +101,8 @@ class Parser:
 
     def parse_return(self) -> Node and Exception:
         self.advance()
+        if self.token.type == SEMICOLON:
+            return ReturnNode(IdentifierNode("null")), None
         expr, err = self.parse_expr(0)
         if err != None: return None, err
         return ReturnNode(expr), None

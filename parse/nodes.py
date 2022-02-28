@@ -99,6 +99,13 @@ class ReturnNode(Node):
     def __str__(self) -> str:
         return "RETURN " + self.expression.__str__()
 
+class BreakNode(Node):
+    def __init__(self) -> None:
+        super().__init__(BREAK)
+    
+    def __str__(self) -> str:
+        return "BREAK"
+
 
 class BinaryOperationNode(Node):
     def __init__(self, left : Node, op : str, right : Node) -> None:
@@ -210,3 +217,11 @@ class FlagNode(Node):
 
     def __str__(self) -> str:
         return "FLAG : " + self.option
+
+class LoadNode(Node):
+    def __init__(self, option : str) -> None:
+        super().__init__(LOAD)
+        self.option = option
+
+    def __str__(self) -> str:
+        return "LOAD : " + self.option

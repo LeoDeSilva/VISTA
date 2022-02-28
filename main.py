@@ -20,7 +20,7 @@ def main():
             if err != None: raise(err)
             # [print(node) for node in ast.nodes]
 
-            result, err = eval(ast, environment)
+            result, _, err = eval(ast, environment)
             if err != None: raise(err)
 
 if __name__ == "__main__":

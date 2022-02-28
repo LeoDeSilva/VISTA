@@ -1,6 +1,8 @@
 EOF = "EOF"
 ERROR = "ERROR"
 
+LOAD = "LOAD"
+
 LOCAL = "LOCAL"
 GLOBAL = "GLOBAL"
 CONDITIONAL = "CONDITIONAL"
@@ -35,6 +37,7 @@ FOR    = "FOR"
 WHILE  = "WHILE"
 ELSE   = "ELSE"
 RETURN = "RETURN"
+BREAK = "BREAK"
 INDEX = "INDEX"
 REPLACE = "REPLACE"
 
@@ -110,6 +113,8 @@ keywords = {
 	"else":   ELSE,
 	"return": RETURN,
     "global": GLOBAL,
+    "break": BREAK,
+    "load": LOAD,
 }
 
 def lookup_identifier(identifier : str) -> Token and Exception:
