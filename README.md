@@ -1,7 +1,7 @@
 # VISTA
 Programming language designed for 2D graphics (based off of PyGame)
 
-## Concept 
+## Example 
 ``` c#
 load pygame;
 
