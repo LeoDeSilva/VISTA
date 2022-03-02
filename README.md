@@ -1,5 +1,9 @@
 # VISTA
-Programming language designed for 2D graphics (based off of PyGame)
+
+## What is VISTA
+VISTA is an unstable mess of a programming langauge with error messages that will make you want to pull out your hair. It is a statically typed language with typing similar to C# and syntax similar to that of javascript. It is intended for smaller demo projects where frustrating error messages will not make you destroy your entire computer in rage as you attempt to write code that due to no fault of yours, it horrificly mangled in a buggy compiler. 
+
+https://leo-de-silva.gitbook.io/vista/
 
 ## Example 
 ``` c#
