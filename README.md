@@ -4,6 +4,10 @@
 
 Welcome to VISTA Documentation! Here you'll find all the documentation you need to get up and running with the VISTA.
 
+### Github
+
+[https://github.com/LeoDeSilva/VISTA](https://github.com/LeoDeSilva/VISTA)
+
 ## Want to jump right in?
 
 Jump in to the quick start docs and get making your first program:
