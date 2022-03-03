@@ -62,6 +62,7 @@ def handle_clear(node : InvokeNode, environment : Environment) -> Object and Env
     colour_value = return_base(colour)
     screen = environment.externals["screen"]
     screen.fill(colour_value)
+    # pygame.display.flip()
     
     return Null(), environment, None
 
@@ -89,6 +90,7 @@ def handle_rect(node : InvokeNode, environment : Environment) -> Object and Envi
         screen = environment.externals["screen"]
 
         pygame.draw.rect(screen, colour_base, (position_base[0], position_base[1], size_base[0], size_base[1]))
+        # pygame.display.flip()
     else:
         return None, None, EvaluatorException("PygameError: Screen not initialised")
 
@@ -124,7 +126,12 @@ def handle_tickrate(node : InvokeNode, environment : Environment) -> Object and 
     environment.externals["tickrate"] = ticks.value
     return Null(), environment, None
 
+def handle_updateScreen(node : InvokeNode, environment : Environment) -> Object and Environment and Exception:
+    if len(node.parameters) != 0:
+        return None, None, EvaluatorException("updateScreenError: Expected parameter length 0, got: " + str(len(node.parameters)))
 
+    pygame.display.flip()
+    return Null(), environment, None
 
 
 def extract_functions():
@@ -136,4 +143,5 @@ def extract_functions():
         "rect": handle_rect,
         "tick": handle_tick,
         "tickrate": handle_tickrate,
+        "updateScreen": handle_updateScreen,
     }

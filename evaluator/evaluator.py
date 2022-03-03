@@ -206,11 +206,12 @@ def eval_while(whilenode : WhileNode, environment : Environment) -> Object and E
 def eval_array(array : ArrayNode, environment : Environment) -> Object and Exception:
     if len(array.nodes) == 0: return Array([]), None
     exprs = []
-    array_type = array.nodes[0].type
+    array_type = ""
     for node in array.nodes:
-        if node.type != array_type:
-            return None, EvaluatorException("TypeError: " + node.__str__() + " Of Type : " + node.type + ", Expected : " + array_type)
         node_expr, err = eval(node, environment)
+        if array_type == "": array_type = node_expr.__type__()
+        if not types_equal(array_type, node_expr.__type__()):
+            return None, EvaluatorException("TypeError: " + node_expr.__str__() + " Of Type : " + node_expr.__type__() + ", Expected : " + array_type)
         if err != None: return None, err
         exprs.append(node_expr)
     return Array(exprs), None

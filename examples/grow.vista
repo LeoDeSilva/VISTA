@@ -1,0 +1,10 @@
+load pygame;
+newWindow(500,500);
+
+int size = 0;
+null update() {
+    clear();
+    size = size + 1;
+    rect([250-size/2,250-size/2], [size,size], [255,0,0]);
+}
+pygameInit();

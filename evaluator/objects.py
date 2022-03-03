@@ -1,4 +1,5 @@
 import random
+import time
 
 from lexer.token import *
 from parse.nodes import *
@@ -198,6 +199,8 @@ def new_environment() -> Environment:
             "append":handle_append,
             "remove":handle_remove,
             "insert":handle_insert,
+
+            "sleep": handle_sleep,
         },
         externals={}
     )
@@ -323,6 +326,18 @@ def handle_rnd(node : InvokeNode, environment : Environment) -> Object and Excep
         max = node.parameters[1].value
 
     return assign_type(random.randint(min,max)), environment, None
+
+def handle_sleep(node : InvokeNode, environment : Environment) -> Object and Exception:
+    if len(node.parameters) != 1:
+        return None, None, EvaluatorException("SleepError: Expected parameter length 1, got: " + str(len(node.parameters)))
+
+    if node.parameters[0].__type__() not in ("int", "float"):
+        return None, None, EvaluatorException("SleepError: Parameter 0 expected type INT or FLOAT, got: " + node.parameters[0].__str__())
+    sleep_value = node.parameters[0].value
+
+    time.sleep(sleep_value)
+    
+    return Null(), environment, None
 
 
 def handle_round(node : InvokeNode, environment : Environment) -> Object and Exception:

@@ -1,0 +1,45 @@
+load pygame;
+newWindow(500,500);
+
+[]int populate() {
+    []int array = [];
+    for (int i => range(500)) {
+        array = append(array, rnd(500));
+    }
+    return array;
+}
+
+[]int bubbleSort([]int list) {
+    for(int i => range(length(list))) {
+        for (int j => range(length(list) - 1)) {
+            if (list[j] > list[j+1]) {
+                int nextElement = list[j+1];
+                list[j+1] = list[j];
+                list[j] = nextElement;
+            }
+        }
+        drawBars(list);
+    }
+    return list;
+}
+
+null drawBars([]int list) {
+    clear();
+
+    float gap = 500/length(list);
+
+    int i = 0;
+    for (int element => list) {
+        rect([int(i*gap), 500-element], [float(gap),float(element)], [0,0,0]);
+        i = i + 1;
+    }
+    updateScreen();
+}
+
+[]int rnd_array = populate();
+
+null update() {
+    rnd_array = bubbleSort(rnd_array);
+}
+
+pygameInit();
