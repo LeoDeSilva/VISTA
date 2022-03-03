@@ -5,7 +5,7 @@ float iphone = 1000.0;
 float cigarette = 20.0;
 
 null quantity(string icon, float price, float currency) {
-    print(icon + ":", round(currency/price,1));
+    print(icon + ":", round(currency/price, 1));
 }
 
 float currencyInput(string prompt) {

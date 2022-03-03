@@ -9,14 +9,14 @@ def main():
         print("Useage: main.py <filename>")
     else:
         with open(sys.argv[1]) as f:
-            environment = new_environment()
+            environment = new_environment(1)
             l = Lexer(f.read().strip())  
-            tokens, err = l.lex()
+            tokens, err = l.lex_program()
             if err != None: raise(err)
             # [print(token) for token in tokens]
 
             p = Parser(tokens)
-            ast, err = p.parse()
+            ast, err = p.parse_tokens()
             if err != None: raise(err)
             # [print(node) for node in ast.nodes]
 

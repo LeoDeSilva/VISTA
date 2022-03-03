@@ -1,3 +1,4 @@
+from os import environ
 from evaluator.objects import *
 from lexer.token import *
 from parse.nodes import *
@@ -53,26 +54,26 @@ def eval(node : Node, environment : Environment) -> Object and Exception:
         return eval_load(node, environment)
     
     else:
-        return None, EvaluatorException("UnexpectedNode: " + node.__str__())
+        return None, EvaluatorException(environment.lineNumber,"UnexpectedNode: " + node.__str__())
 
 def eval_load(load : LoadNode, environment : Environment) -> Object and Exception:
     if load.option == "pygame":
-        import modules.pygame_functions as pygame_functions
-        environment.functions.update(pygame_functions.extract_functions())
+        import modules.pygame_module as pygame_module
+        environment.functions.update(pygame_module.extract_methods())
     return Null(), None
 
 def eval_index(index : IndexNode, environment :  Environment) -> Object and Exception:
     array, err = eval(index.array, environment)
     if err != None: return None, err
     if array.type not in (ARRAY, STRING):
-        return None,EvaluatorException("IndexError: Cannot Index: " + array.__str__() + " Expected Type ARRAY")
+        return None,EvaluatorException(environment.lineNumber,"IndexError: Cannot Index: " + array.__str__() + " Expected Type ARRAY")
 
     index_expr, err = eval(index.index, environment)
     if err != None: return None
     if index_expr.type != INT:
-        return None, EvaluatorException("IndexError: Index must be of type INT, got: " + index_expr.__str__())
+        return None, EvaluatorException(environment.lineNumber,"IndexError: Index must be of type INT, got: " + index_expr.__str__())
     
-    return array.index(index_expr.value)
+    return array.index(index_expr.value, environment)
 
 def eval_return(returnnode : ReturnNode, environment : Environment) -> Object and Exception:
     expression, err = eval(returnnode.expression, environment)
@@ -86,7 +87,7 @@ def eval_invoke(invoke : InvokeNode, environment : Environment) -> Object and Ex
         if err != None: return None, err
         parameters.append(param_expr)
 
-    local_environment = new_environment()
+    local_environment = new_environment(environment.lineNumber)
     local_environment.globals = environment.globals
     local_environment.locals = environment.locals
     local_environment.externals = environment.externals
@@ -98,20 +99,20 @@ def eval_invoke(invoke : InvokeNode, environment : Environment) -> Object and Ex
     elif invoke.identifier in environment.globals:
         function = environment.globals[invoke.identifier]
     elif invoke.identifier in environment.functions:
-        result, updated_env, err =  environment.functions[invoke.identifier](InvokeNode(invoke.identifier, parameters),local_environment)
+        result, updated_env, err =  environment.functions[invoke.identifier](InvokeNode(invoke.line_number,invoke.identifier, parameters),local_environment)
         if err != None: return None, err
         environment.globals.update(updated_env.globals)
         environment.externals.update(updated_env.externals)
         return result, err
     else:
-        return None, EvaluatorException("InvokeFunctionError: Undefined Function: " + invoke.identifier)
+        return None, EvaluatorException(environment.lineNumber,"InvokeFunctionError: Undefined Function: " + invoke.identifier)
 
     if function.type != FUNCTION:
-        return None, EvaluatorException("InvokeFunctionError: Identifier: " + invoke.identifier + " Not type FUNCTION")
+        return None, EvaluatorException(environment.lineNumber,"InvokeFunctionError: Identifier: " + invoke.identifier + " Not type FUNCTION")
 
     for i,param_node in enumerate(function.parameters):
         if not types_equal(param_node.var_type, parameters[i].__type__()):
-            return None, EvaluatorException("InvokeFunctionError: Expected parameter " + str(i) + " type " + str(param_node.var_type) + " got: " + parameters[i].__type__())
+            return None, EvaluatorException(environment.lineNumber,"InvokeFunctionError: Expected parameter " + str(i) + " type " + str(param_node.var_type) + " got: " + parameters[i].__type__())
 
         local_environment.locals[param_node.identifier] = parameters[i]
 
@@ -123,7 +124,7 @@ def eval_invoke(invoke : InvokeNode, environment : Environment) -> Object and Ex
     if result.type == RETURN:
         return result.expression, None
     elif not types_equal(function.func_type, result.__type__()):
-        return None, EvaluatorException("InvokeFunctionError: Expected Return Type : " + function.func_type + " got: " + result.__type__())
+        return None, EvaluatorException(environment.lineNumber,"InvokeFunctionError: Expected Return Type : " + function.func_type + " got: " + result.__type__())
 
     
     return result, None
@@ -133,13 +134,13 @@ def eval_for(fornode : ForNode, environment : Environment) -> Object and Excepti
     array, err = eval(fornode.expression, environment)
     if err != None: return None, err
     if array.type not in (ARRAY, STRING):
-        return None, EvaluatorException("ForNodeError: Expected Expression Type ARRAY or STRING, got: " + array.__str__())
+        return None, EvaluatorException(environment.lineNumber,"ForNodeError: Expected Expression Type ARRAY or STRING, got: " + array.__str__())
      
     i = 0
     while i < len(array.value):
         expr = array.value[i] if not isinstance(array.value[i],str) else assign_type(array.value[i])
         if not types_equal(fornode.var_type, expr.__type__()):
-            return None, EvaluatorException("ForNodeError: Expected Node Type: " + fornode.var_type + " got: " + expr.__type__()) 
+            return None, EvaluatorException(environment.lineNumber,"ForNodeError: Expected Node Type: " + fornode.var_type + " got: " + expr.__type__()) 
         
         environment.locals[fornode.identifier] = expr
         result, _, err = eval(fornode.consequence, environment)
@@ -211,7 +212,7 @@ def eval_array(array : ArrayNode, environment : Environment) -> Object and Excep
         node_expr, err = eval(node, environment)
         if array_type == "": array_type = node_expr.__type__()
         if not types_equal(array_type, node_expr.__type__()):
-            return None, EvaluatorException("TypeError: " + node_expr.__str__() + " Of Type : " + node_expr.__type__() + ", Expected : " + array_type)
+            return None, EvaluatorException(environment.lineNumber,"TypeError: " + node_expr.__str__() + " Of Type : " + node_expr.__type__() + ", Expected : " + array_type)
         if err != None: return None, err
         exprs.append(node_expr)
     return Array(exprs), None
@@ -227,7 +228,7 @@ def base_array(node : Node, environment : Environment) -> Object and Object and 
     prev_index = array
     cur_node = node
     while cur_node.type == INDEX:
-        prev_index = IndexNode(prev_index, cur_node.index)
+        prev_index = IndexNode(environment.lineNumber, prev_index, cur_node.index)
         cur_node = cur_node.array
     
     identifier = array.identifier if array.type == IDENTIFIER else ""
@@ -236,7 +237,7 @@ def base_array(node : Node, environment : Environment) -> Object and Object and 
     if err != None: return None, None, None, err
 
     if base.type not in (ARRAY, STRING):
-        return None, None, None, EvaluatorException("IndexError: cannot index: " + base.__str__() + " expected type ARRAY, got: " + base.type)
+        return None, None, None, EvaluatorException(environment.lineNumber,"IndexError: cannot index: " + base.__str__() + " expected type ARRAY, got: " + base.type)
 
     return base, prev_index, identifier, None
 
@@ -249,7 +250,7 @@ def replace(base : Object, node : Object, index : int, value : Object, environme
         if err != None: return None, err
 
         # The array to be replaced is the index of this array e.g. [[1,2]][0] = [1,2]
-        next_array, err = base.index(index)
+        next_array, err = base.index(index, environment)
         if err != None: return None, err
 
         # the replaced version of the next_array e.g. [10,2][0] = -1  => [0,2]
@@ -257,11 +258,11 @@ def replace(base : Object, node : Object, index : int, value : Object, environme
         if err != None: return None, err
 
         # Replace the index to be changed with modified sub array
-        return base.replace(index, replaced)
+        return base.replace(index, replaced, environment)
 
     elif node.type == INDEX:
         # If lowest level index, just replace base array
-        return  base.replace(index,value)
+        return  base.replace(index,value, environment)
 
 
 def eval_assign(assign : AssignNode, environment : Environment) -> Object and Exception:
@@ -294,17 +295,17 @@ def eval_assign(assign : AssignNode, environment : Environment) -> Object and Ex
     if assign_identifier in environment.locals: 
         node = environment.locals[assign_identifier]
         if not types_equal(node.__type__(), expr.__type__()): 
-            return None, EvaluatorException("TypeError: " +expr.__type__() + " Of Type : " + expr.__type__() + " Does Not Equal Type : " + node.__type__())
+            return None, EvaluatorException(environment.lineNumber,"TypeError: " +expr.__type__() + " Of Type : " + expr.__type__() + " Does Not Equal Type : " + node.__type__())
         environment.locals[assign_identifier] = expr
 
     elif assign_identifier in environment.globals:
         node = environment.globals[assign_identifier]
         if not types_equal(node.__type__(), expr.__type__()): 
-            return None, EvaluatorException("TypeError: " +expr.__type__() + " Of Type : " + expr.__type__() + " Does Not Equal Type : " + node.__type__())
+            return None, EvaluatorException(environment.lineNumber,"TypeError: " +expr.__type__() + " Of Type : " + expr.__type__() + " Does Not Equal Type : " + node.__type__())
         environment.globals[assign_identifier] = expr
 
     else:
-        return None, EvaluatorException("UndefinedVariable: " + assign_identifier)
+        return None, EvaluatorException(environment.lineNumber,"UndefinedVariable: " + assign_identifier)
     
     return Null(), None
 
@@ -326,7 +327,7 @@ def eval_init(init : InitialiseNode, environment : Environment) -> Object and Ex
     if err != None: return None, err
 
     if not types_equal(init.var_type, expr.__type__()):
-        return None, EvaluatorException("TypeError: " +expr.__str__() + " Of Type : " + expr.__type__() + " Does Not Equal Type : " + init.var_type)
+        return None, EvaluatorException(environment.lineNumber,"TypeError: " +expr.__str__() + " Of Type : " + expr.__type__() + " Does Not Equal Type : " + init.var_type)
     
     if init.scope == GLOBAL:
         environment.globals[init.identifier] = expr
@@ -345,7 +346,7 @@ def eval_identifier(identifier : IdentifierNode, environment : Environment) -> O
     elif identifier.identifier in environment.globals:
         return environment.globals[identifier.identifier], None
 
-    return None, EvaluatorException("UndefinedVariable: " + identifier.identifier)
+    return None, EvaluatorException(environment.lineNumber,"UndefinedVariable: " + identifier.identifier)
 
 def eval_unary(unary : UnaryOperationNode, environment : Environment) -> Object and Exception:
     right, err = eval(unary.right, environment)
@@ -366,13 +367,14 @@ def eval_binop(binop : BinaryOperationNode, environment : Environment) -> Object
     right, err = eval(binop.right, environment)
     if err != None: return None, err
 
-    result,err = left.binary_operation(right, binop.op)
+    result,err = left.binary_operation(right, binop.op, environment)
     if err != None: return None, err
 
     return result, None
 
 def eval_program(program : ProgramNode, environment : Environment) -> Object and Exception:
     for node in program.nodes:
+        environment.lineNumber = node.line_number
         result, err = eval(node, environment)
         if err != None: return None, None, err
 

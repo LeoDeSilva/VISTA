@@ -2,31 +2,33 @@ from lexer.token import *
 from typing import List
 
 class ParserException(Exception):
-    pass
+    def __init__(self, line_number : int, message : str):
+        super().__init__(line_number,f"Line {line_number}: {message}")
 
 class Node:
-    def __init__(self, type) -> None:
+    def __init__(self, line_number, type) -> None:
         self.type = type
+        self.line_number = line_number
 
 
 class ErrorNode(Node):
-    def __init__(self) -> None:
-        super().__init__(ERROR)
+    def __init__(self, line_number,) -> None:
+        super().__init__(line_number, ERROR)
 
     def __str__(self) -> str:
         return "{ERROR}"
 
 class ProgramNode(Node):
-    def __init__(self, nodes : List[Node]) -> None:
-        super().__init__(PROGRAM)
+    def __init__(self, line_number, nodes : List[Node]) -> None:
+        super().__init__(line_number, PROGRAM)
         self.nodes = nodes
 
     def __str__(self) -> str:
         return "[" + ",".join([node.__str__() for node in self.nodes]) + "]"
 
 class AssignNode(Node):
-    def __init__(self, scope : str , identifier : str, expression : Node) -> None:
-        super().__init__(ASSIGN)
+    def __init__(self, line_number, scope : str , identifier : str, expression : Node) -> None:
+        super().__init__(line_number,ASSIGN)
         self.scope = scope
         self.identifier = identifier
         self.expression = expression
@@ -35,8 +37,8 @@ class AssignNode(Node):
         return "(" + self.scope + " " + self.identifier.__str__() + " = " + self.expression.__str__() + ")"
 
 class InitialiseNode(Node):
-    def __init__(self, scope : str, type : str, identifier : str, expression : Node, parameters : List[Node] = None) -> None:
-        super().__init__(INITIALISE)
+    def __init__(self, line_number, scope : str, type : str, identifier : str, expression : Node, parameters : List[Node] = None) -> None:
+        super().__init__(line_number,INITIALISE)
         self.scope = scope
         self.var_type = type
         self.identifier = identifier
@@ -47,8 +49,8 @@ class InitialiseNode(Node):
         return "(" + self.scope + " " + self.type + " " +  self.identifier + (("(" + ",".join([p.__str__() for p in self.parameters]) + ")") if self.parameters != None else "") + " = " + self.expression.__str__() + ")"
 
 class ConditionNode(Node):
-    def __init__(self, seperator : str, condition : Node) -> None:
-        super().__init__(ConditionNode)
+    def __init__(self, line_number, seperator : str, condition : Node) -> None:
+        super().__init__(line_number,ConditionNode)
         self.seperator = seperator
         self.condition = condition
 
@@ -56,8 +58,8 @@ class ConditionNode(Node):
         return "(" + self.seperator + " " + self.condition.__str__()  + ")"
 
 class ConditionalNode(Node):
-    def __init__(self, conditions : List[ConditionNode], consequence : ProgramNode) -> None:
-        super().__init__(CONDITIONAL)
+    def __init__(self, line_number, conditions : List[ConditionNode], consequence : ProgramNode) -> None:
+        super().__init__(line_number,CONDITIONAL)
         self.conditions = conditions
         self.consequence = consequence
 
@@ -65,24 +67,24 @@ class ConditionalNode(Node):
         return  "(" + ",".join([condition.__str__() for condition in self.conditions]) + ")" + "\n\t => " + self.consequence.__str__() 
 
 class IfNode(Node):
-    def __init__(self, conditions : List[ConditionalNode]) -> None:
-        super().__init__(IF)
+    def __init__(self, line_number, conditions : List[ConditionalNode]) -> None:
+        super().__init__(line_number,IF)
         self.conditions = conditions
 
     def __str__(self) -> str:
         return "IF: \n =>" + "\n =>".join([condition.__str__() for condition in self.conditions]) + ")"
 
 class WhileNode(Node):
-    def __init__(self, conditional : ConditionalNode) -> None:
-        super().__init__(WHILE)
+    def __init__(self, line_number, conditional : ConditionalNode) -> None:
+        super().__init__(line_number,WHILE)
         self.conditional = conditional
 
     def __str__(self) -> str:
         return "WHILE (" + self.conditional.__str__() + ")"
 
 class ForNode(Node):
-    def __init__(self, type : str, identifier : str, expression : Node ,consequence : ProgramNode) -> None:
-        super().__init__(FOR)
+    def __init__(self, line_number, type : str, identifier : str, expression : Node ,consequence : ProgramNode) -> None:
+        super().__init__(line_number,FOR)
         self.var_type = type
         self.identifier = identifier
         self.expression = expression
@@ -92,24 +94,24 @@ class ForNode(Node):
         return "FOR (" + self.var_type + " " + self.identifier + " => " + self.expression.__str__() + " { " + self.consequence.__str__() + " })"
 
 class ReturnNode(Node):
-    def __init__(self, expression) -> None:
-        super().__init__(RETURN)
+    def __init__(self, line_number, expression) -> None:
+        super().__init__(line_number,RETURN)
         self.expression = expression
     
     def __str__(self) -> str:
         return "RETURN " + self.expression.__str__()
 
 class BreakNode(Node):
-    def __init__(self) -> None:
-        super().__init__(BREAK)
+    def __init__(self, line_number) -> None:
+        super().__init__(line_number,BREAK)
     
     def __str__(self) -> str:
         return "BREAK"
 
 
 class BinaryOperationNode(Node):
-    def __init__(self, left : Node, op : str, right : Node) -> None:
-        super().__init__(BIN_OP)
+    def __init__(self, line_number, left : Node, op : str, right : Node) -> None:
+        super().__init__(line_number,BIN_OP)
         self.left = left
         self.op = op
         self.right = right
@@ -119,8 +121,8 @@ class BinaryOperationNode(Node):
 
 
 class UnaryOperationNode(Node):
-    def __init__(self, op : str, right : Node) -> None:
-        super().__init__(UNARY_OP)
+    def __init__(self, line_number, op : str, right : Node) -> None:
+        super().__init__(line_number,UNARY_OP)
         self.op = op
         self.right = right
 
@@ -129,12 +131,12 @@ class UnaryOperationNode(Node):
 
 
 class AtomNode(Node):
-    def __init__(self, type : str) -> None:
-        super().__init__(type)
+    def __init__(self, line_number, type : str) -> None:
+        super().__init__(line_number,type)
 
 class InvokeNode(AtomNode):
-    def __init__(self, identifier : str, parameters : List[Node]) -> None:
-        super().__init__(INVOKE)
+    def __init__(self, line_number, identifier : str, parameters : List[Node]) -> None:
+        super().__init__(line_number,INVOKE)
         self.identifier = identifier
         self.parameters = parameters
 
@@ -142,16 +144,16 @@ class InvokeNode(AtomNode):
         return self.identifier + "(" + ",".join([param.__str__() for param in self.parameters]) + ")"
 
 class ArrayNode(AtomNode):
-    def __init__(self, nodes : List[Node]) -> None:
-        super().__init__(ARRAY)
+    def __init__(self, line_number, nodes : List[Node]) -> None:
+        super().__init__(line_number,ARRAY)
         self.nodes = nodes
 
     def __str__(self) -> str:
         return "[" + ",".join([node.__str__() for node in self.nodes]) + "]"
 
 class IndexNode(AtomNode):
-    def __init__(self, array : Node, index : Node) -> None:
-        super().__init__(INDEX)
+    def __init__(self, line_number, array : Node, index : Node) -> None:
+        super().__init__(line_number,INDEX)
         self.array = array
         self.index = index
 
@@ -160,40 +162,40 @@ class IndexNode(AtomNode):
 
 
 class IdentifierNode(AtomNode):
-    def __init__(self, identifier : str) -> None:
-        super().__init__(IDENTIFIER)
+    def __init__(self, line_number, identifier : str) -> None:
+        super().__init__(line_number,IDENTIFIER)
         self.identifier = identifier
 
     def __str__(self) -> str:
         return self.identifier
 
 class StringNode(AtomNode):
-    def __init__(self, value : str) -> None:
-        super().__init__(STRING) 
+    def __init__(self, line_number, value : str) -> None:
+        super().__init__(line_number,STRING) 
         self.value = value
 
     def __str__(self) -> str:
         return self.value
 
 class NumberNode(AtomNode):
-    def __init__(self, type : str , value : int or float) -> None:
-        super().__init__(type)
+    def __init__(self, line_number, type : str , value : int or float) -> None:
+        super().__init__(line_number,type)
         self.value = value
 
     def __str__(self) -> str: 
         return str(self.value)
 
 class IntNode(NumberNode):
-    def __init__(self, value : int) -> None:
-        super().__init__(INT, value)
+    def __init__(self, line_number, value : int) -> None:
+        super().__init__(line_number,INT, value)
 
 class FloatNode(NumberNode):
-    def __init__(self, value : float) -> None:
-        super().__init__(FLOAT, value)
+    def __init__(self, line_number, value : float) -> None:
+        super().__init__(line_number,FLOAT, value)
 
 class BoolNode(AtomNode):
-    def __init__(self, value : int) -> None:
-        super().__init__(BOOL)
+    def __init__(self, line_number, value : int) -> None:
+        super().__init__(line_number,BOOL)
         self.value = value
 
     def __str__(self) -> str:
@@ -202,8 +204,8 @@ class BoolNode(AtomNode):
         return "false" 
 
 class ParameterNode(AtomNode):
-    def __init__(self, var_type : str, identifier : str) -> None:
-        super().__init__(PARAMETER)
+    def __init__(self, line_number, var_type : str, identifier : str) -> None:
+        super().__init__(line_number,PARAMETER)
         self.var_type = var_type
         self.identifier = identifier
 
@@ -211,16 +213,16 @@ class ParameterNode(AtomNode):
         return self.type + " : " + self.identifier
 
 class FlagNode(Node):
-    def __init__(self, option : str) -> None:
-        super().__init__(FLAG)
+    def __init__(self, line_number, option : str) -> None:
+        super().__init__(line_number,FLAG)
         self.option = option
 
     def __str__(self) -> str:
         return "FLAG : " + self.option
 
 class LoadNode(Node):
-    def __init__(self, option : str) -> None:
-        super().__init__(LOAD)
+    def __init__(self, line_number, option : str) -> None:
+        super().__init__(line_number,LOAD)
         self.option = option
 
     def __str__(self) -> str:
