@@ -2,7 +2,7 @@
 
 ## Example Program
 
-The inbuilt data types include `string, int, float`, and `arrays`.  Strings are used to store a series of characters with ints for whole numbers and floats to store floating points. Arrays can store any data type, however all elements must be of the same type. An array data type is initialised with `[]` and then the data type of the elements being stored e.g. `[]float`.&#x20;
+The inbuilt data types include `string, int, float`, and `arrays`. Strings are used to store a series of characters with ints for whole numbers and floats to store floating points. Arrays can store any data type, however all elements must be of the same type. An array data type is initialised with `[]` and then the data type of the elements being stored e.g. `[]float`.
 
 ```csharp
 string stringType = "Hello World";
@@ -23,7 +23,7 @@ Integers store whole numbers such as `10` or `-20`. These do not contain decimal
 
 ```csharp
 int age = 15;
-print("You are", 18-15, "years of being 18");
+print("You are", 18-age, "years of being 18");
 ```
 
 ### Floating Points
@@ -37,7 +37,7 @@ float differnece = 10 - 0.4;
 
 ## Strings
 
-Strings work as they do in languages such as python or javascript, they are a data structure storing a sequence of characters deliminated by quotation marks (' or ") e.g. `"Hello World"`.  Strings can be indexed and unlike some other languages are mutable.
+Strings work as they do in languages such as python or javascript, they are a data structure storing a sequence of characters deliminated by quotation marks (' or ") e.g. `"Hello World"`. Strings can be indexed and unlike some other languages are mutable.
 
 ```csharp
 string name = "Leo De Silva";

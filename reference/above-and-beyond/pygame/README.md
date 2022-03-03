@@ -25,7 +25,7 @@ pygameInit();
 
 ## `pygameInit()`
 
-This initialises the pygame module, meaning that the game screen will be displayed with properties displayed in `newWindow(x,y)` and a clock will be created which handles the tick rate and timings. Without `pygameInit()` the `update()` function will not be called each frame and a window will not be shown. **This should be called at the end of the file.**  If an update function has not been defined, an error will be raised. An `update()` function without the `clear()` function invoked will produce a blank black screen.
+This initialises the pygame module, meaning that the game screen will be displayed with properties displayed in `newWindow(x,y)` and a clock will be created which handles the tick rate and timings. Without `pygameInit()` the `update()` function will not be called each frame and a window will not be shown. **This should be called at the end of the file.** If an update function has not been defined, an error will be raised. An `update()` function without the `clear()` function invoked will produce a blank black screen.
 
 ```csharp
 load pygame;
@@ -36,11 +36,11 @@ null update() {}
 pygameInit();
 ```
 
-``![](<../../../.gitbook/assets/image (1).png>)``
+`![](<../../../.gitbook/assets/image (1).png>)`
 
 ## `update()`
 
-The update function is called each frame, it is where you should draw to the screen and update any logic required each frame such as position. This below code will produce a square that grows with each frame, the rect function is called and the size is divied by 2 since rectangles are drawn from the top left.&#x20;
+The update function is called each frame, it is where you should draw to the screen and update any logic required each frame such as position. This below code will produce a square that grows with each frame, the rect function is called and the size is divied by 2 since rectangles are drawn from the top left.
 
 ```csharp
 load pygame;
@@ -120,3 +120,7 @@ pygameInit();
 ```
 
 This will return same result as the figure in the above section, however it will once change once per second. Another alternative is to call `tick(1);` inside the update function, however this is only recomended to slow down a particular update cycle.
+
+## `updateScreen()`
+
+Usually, the screen is updated at the end of the `update()` function, however the `updateScreen()` function can be called to update the pygame window at any point in the program
