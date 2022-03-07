@@ -43,10 +43,8 @@ class Lexer:
         lexed_tokens = []
         while self.current_char != "":
             tok, err = self.lex_next_character()
-            if err != None:
-                return [], err
-
-            lexed_tokens.append(tok)
+            if err != None: return [], err
+            if tok != None: lexed_tokens.append(tok)
 
         lexed_tokens.append(
             Token(EOF, "", self.line_number)
@@ -91,6 +89,9 @@ class Lexer:
 
         elif self.current_char == "/":
             token, err = self.lex_multichar_token(DIV, {"/": COMMENT})
+            if token.type == COMMENT:
+                self.skip_comment()
+                return None, None
 
         elif self.current_char == "=":
             token, err = self.lex_multichar_token(EQ, {"=": EE, ">": ARROW})
@@ -120,6 +121,10 @@ class Lexer:
 
         self.advance()
         return token, err
+
+    def skip_comment(self) -> None:
+        while self.current_char != "\n":
+            self.advance()
 
     def is_type_identifier(self, type_string: str) -> bool:
         if len(type_string) <= 0:

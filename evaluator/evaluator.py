@@ -52,6 +52,9 @@ def eval(node : Node, environment : Environment) -> Object and Exception:
         return Null(), None
     elif node.type == LOAD:
         return eval_load(node, environment)
+
+    elif node.type == FUNCTION:
+        pass
     
     else:
         return None, EvaluatorException(environment.lineNumber,"UnexpectedNode: " + node.__str__())

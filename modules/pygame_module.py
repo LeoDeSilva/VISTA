@@ -27,6 +27,9 @@ def handle_newWindow(node : InvokeNode, environment : Environment) -> Object and
     return Null(), environment, None
 
 def handle_pygameInit(node : InvokeNode, environment : Environment) -> Object and Environment and Exception:
+    if len(node.parameters) != 1:
+        return None, None, EvaluatorException("pygameInitError: Expected parameter length 1, got:" + str(len(node.parameters)))
+
     running = True 
     while running:
         if "tickrate" in environment.externals:
@@ -38,7 +41,7 @@ def handle_pygameInit(node : InvokeNode, environment : Environment) -> Object an
             if event.type == pygame.QUIT:
                 running = False
         
-        result, err = eval(InvokeNode(environment.lineNumber,"update", []), environment)
+        result, err = eval(node.parameters[0].consequence, environment)
         if err != None:
             return None, None, err
 

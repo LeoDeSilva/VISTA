@@ -49,7 +49,7 @@ class FunctionDeclaration(Object):
         self.consequence = consequence
 
     def __type__(self) -> str:
-        return self.type
+        return self.func_type
 
 class Factor(Object):
     def __init__(self, type: str, value) -> None:

@@ -1,6 +1,7 @@
 load pygame;
 newWindow(500,500);
 
+// Fill array with random integers -> 100 length
 []int populateArray() {
     []int array = [];
     for (int i => range(500)) {
@@ -42,8 +43,8 @@ null drawBars([]int list) {
 
 []int rnd_array = populateArray();
 
-null update() {
+null handleUpdate() {
     rnd_array = bubbleSort(rnd_array);
 }
 
-pygameInit(update);
+pygameInit(handleUpdate);
