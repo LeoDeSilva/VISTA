@@ -1,8 +1,0 @@
-int first = int => ([]int a) {
-    return a[0];
-}
-
-print(first([1,2,3]));
-print(int => ([]int a) {
-    return a[0];
-}([1,2,3]));

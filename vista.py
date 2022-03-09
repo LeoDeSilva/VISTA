@@ -1,7 +1,7 @@
 import sys
 from lexer.lexer import Lexer
 from parse.parser import Parser
-from evaluator.evaluator import eval
+from evaluator.evaluator import eval, eval_program
 from evaluator.objects import Environment, new_environment
 
 def main():
@@ -20,7 +20,7 @@ def main():
             if err != None: raise(err)
             # [print(node) for node in ast.nodes]
 
-            result, _, err = eval(ast, environment)
+            result, _, err = eval_program(ast, environment)
             if err != None: raise(err)
 
 if __name__ == "__main__":

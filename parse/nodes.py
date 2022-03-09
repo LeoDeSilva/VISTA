@@ -135,13 +135,13 @@ class AtomNode(Node):
         super().__init__(line_number,type)
 
 class InvokeNode(AtomNode):
-    def __init__(self, line_number, identifier : str, parameters : List[Node]) -> None:
+    def __init__(self, line_number, identifier : Node, parameters : List[Node]) -> None:
         super().__init__(line_number,INVOKE)
-        self.identifier = identifier
+        self.function_node = identifier
         self.parameters = parameters
 
     def __str__(self) -> str:
-        return self.identifier + "(" + ",".join([param.__str__() for param in self.parameters]) + ")"
+        return self.function_node.__str__() + "(" + ",".join([param.__str__() for param in self.parameters]) + ")"
 
 class ArrayNode(AtomNode):
     def __init__(self, line_number, nodes : List[Node]) -> None:
@@ -227,3 +227,13 @@ class LoadNode(Node):
 
     def __str__(self) -> str:
         return "LOAD : " + self.option
+
+class AnonymousFunctionNode(Node):
+    def __init__(self, line_number,  var_type : str, consequence : Node, parameters : List[Node] = None) -> None:
+        super().__init__(line_number, ANONYMOUS)
+        self.var_type = var_type
+        self.consequence = consequence
+        self.parameters = parameters
+
+    def __str__(self) -> str:
+        return "(" + self.var_type + (("(" + ",".join([p.__str__() for p in self.parameters]) + ")") if self.parameters != None else "") + " = " + self.consequence.__str__() + ")"

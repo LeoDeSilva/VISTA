@@ -1,3 +1,4 @@
+from os import environ
 import random
 import time
 
@@ -172,9 +173,9 @@ class Environment:
         self.functions = functions
         self.externals = externals
 
-def new_environment(line_number) -> Environment: 
+def new_environment(line_number : int, parent : Environment = None) -> Environment: 
     import modules.standard_module as standard_module
-    return Environment(
+    environment = Environment(
         lineNumber=line_number,
         flags={},
         constants = {
@@ -187,6 +188,13 @@ def new_environment(line_number) -> Environment:
         functions=standard_module.extract_methods(),
         externals={}
     )
+    if parent != None:
+        environment.globals = parent.globals
+        environment.locals = parent.locals
+        environment.externals = parent.externals
+        environment.functions = parent.functions
+
+    return environment
 
 # Helpers 
 

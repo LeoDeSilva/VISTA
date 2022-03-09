@@ -42,9 +42,6 @@ null drawBars([]int list) {
 }
 
 []int rnd_array = populateArray();
-
-null handleUpdate() {
+pygameInit(null => (){
     rnd_array = bubbleSort(rnd_array);
-}
-
-pygameInit(handleUpdate);
+});

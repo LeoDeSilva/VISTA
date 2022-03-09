@@ -1,4 +1,5 @@
 from os import environ
+from xmlrpc.client import INVALID_ENCODING_CHAR
 from evaluator.objects import *
 from lexer.token import *
 from parse.nodes import *
@@ -52,12 +53,14 @@ def eval(node : Node, environment : Environment) -> Object and Exception:
         return Null(), None
     elif node.type == LOAD:
         return eval_load(node, environment)
-
-    elif node.type == FUNCTION:
-        pass
+    elif node.type == ANONYMOUS:
+        return eval_anonymous(node, environment)
     
     else:
         return None, EvaluatorException(environment.lineNumber,"UnexpectedNode: " + node.__str__())
+
+def eval_anonymous(anonymous : AnonymousFunctionNode, environment : Environment) -> Object and Exception:
+    return FunctionDeclaration(anonymous.var_type, anonymous.parameters, anonymous.consequence), None
 
 def eval_load(load : LoadNode, environment : Environment) -> Object and Exception:
     if load.option == "pygame":
@@ -90,28 +93,35 @@ def eval_invoke(invoke : InvokeNode, environment : Environment) -> Object and Ex
         if err != None: return None, err
         parameters.append(param_expr)
 
-    local_environment = new_environment(environment.lineNumber)
-    local_environment.globals = environment.globals
-    local_environment.locals = environment.locals
-    local_environment.externals = environment.externals
-    local_environment.functions = environment.functions
+    local_environment = new_environment(environment.lineNumber, environment)
 
-
-    if invoke.identifier in environment.locals:
-        function = environment.locals[invoke.identifier]
-    elif invoke.identifier in environment.globals:
-        function = environment.globals[invoke.identifier]
-    elif invoke.identifier in environment.functions:
-        result, updated_env, err =  environment.functions[invoke.identifier](InvokeNode(invoke.line_number,invoke.identifier, parameters),local_environment)
+    if invoke.function_node.type == ANONYMOUS:
+        function, err = eval(invoke.function_node, environment)
         if err != None: return None, err
-        environment.globals.update(updated_env.globals)
-        environment.externals.update(updated_env.externals)
-        return result, err
-    else:
-        return None, EvaluatorException(environment.lineNumber,"InvokeFunctionError: Undefined Function: " + invoke.identifier)
+
+    elif invoke.function_node.type == IDENTIFIER:
+        if invoke.function_node.identifier in environment.locals:
+            function = environment.locals[invoke.function_node.identifier]
+
+        elif invoke.function_node.identifier in environment.globals:
+            function = environment.globals[invoke.function_node.identifier]
+
+        elif invoke.function_node.identifier in environment.functions:
+            result, updated_env, err =  environment.functions[invoke.function_node.identifier](
+                InvokeNode(invoke.line_number,invoke.function_node.identifier, parameters),
+                local_environment
+            )
+
+            if err != None: return None, err
+            environment.globals.update(updated_env.globals)
+            environment.externals.update(updated_env.externals)
+            return result, err
+
+        else:
+            return None, EvaluatorException(environment.lineNumber,"InvokeFunctionError: Undefined Function: " + invoke.function_node.identifier)
 
     if function.type != FUNCTION:
-        return None, EvaluatorException(environment.lineNumber,"InvokeFunctionError: Identifier: " + invoke.identifier + " Not type FUNCTION")
+        return None, EvaluatorException(environment.lineNumber,"InvokeFunctionError: Identifier: " + invoke.function_node + " Not type FUNCTION")
 
     for i,param_node in enumerate(function.parameters):
         if not types_equal(param_node.var_type, parameters[i].__type__()):
@@ -119,7 +129,7 @@ def eval_invoke(invoke : InvokeNode, environment : Environment) -> Object and Ex
 
         local_environment.locals[param_node.identifier] = parameters[i]
 
-    result, updated_env, err = eval(function.consequence, local_environment)
+    result, updated_env, err = eval_program(function.consequence, local_environment)
     if err != None: return None, err
     environment.globals.update(updated_env.globals)
     environment.externals.update(updated_env.externals)
@@ -129,7 +139,6 @@ def eval_invoke(invoke : InvokeNode, environment : Environment) -> Object and Ex
     elif not types_equal(function.func_type, result.__type__()):
         return None, EvaluatorException(environment.lineNumber,"InvokeFunctionError: Expected Return Type : " + function.func_type + " got: " + result.__type__())
 
-    
     return result, None
         
 
@@ -146,7 +155,7 @@ def eval_for(fornode : ForNode, environment : Environment) -> Object and Excepti
             return None, EvaluatorException(environment.lineNumber,"ForNodeError: Expected Node Type: " + fornode.var_type + " got: " + expr.__type__()) 
         
         environment.locals[fornode.identifier] = expr
-        result, _, err = eval(fornode.consequence, environment)
+        result, _, err = eval_program(fornode.consequence, environment)
         if err != None: return None, err
         if result.type == RETURN: return result, None
         elif result.type == BREAK: break
@@ -177,7 +186,7 @@ def eval_conditional(node : IfNode, environment : Environment) -> Object and Exc
     if err != None: return None, err, False
 
     if satisfied:
-        result, _, err = eval(node.consequence, environment)
+        result, _, err = eval_program(node.consequence, environment)
         if err != None: return None, err, True
         # if result.type == RETURN: return result, None, True
         # return Null(), None, True
@@ -313,8 +322,6 @@ def eval_assign(assign : AssignNode, environment : Environment) -> Object and Ex
     return Null(), None
 
 
-    
-
 def eval_init(init : InitialiseNode, environment : Environment) -> Object and Exception:
     if init.parameters != None:
         function = FunctionDeclaration(init.var_type, init.parameters, init.expression)
@@ -375,7 +382,7 @@ def eval_binop(binop : BinaryOperationNode, environment : Environment) -> Object
 
     return result, None
 
-def eval_program(program : ProgramNode, environment : Environment) -> Object and Exception:
+def eval_program(program : ProgramNode, environment : Environment) -> Object and Environment and Exception:
     for node in program.nodes:
         environment.lineNumber = node.line_number
         result, err = eval(node, environment)

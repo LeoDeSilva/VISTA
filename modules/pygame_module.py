@@ -1,6 +1,6 @@
 import pygame
 from evaluator.objects import *
-from evaluator.evaluator import eval
+from evaluator.evaluator import eval_program
 from parse.nodes import *
 from lexer.token import *
 
@@ -41,7 +41,7 @@ def handle_pygameInit(node : InvokeNode, environment : Environment) -> Object an
             if event.type == pygame.QUIT:
                 running = False
         
-        result, err = eval(node.parameters[0].consequence, environment)
+        _, _, err = eval_program(node.parameters[0].consequence, environment)
         if err != None:
             return None, None, err
 

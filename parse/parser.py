@@ -193,6 +193,7 @@ class Parser:
     # ( type ID , type ID )
     def parse_params(self) -> List[Node] and Exception:
         parameters = []
+
         while self.current_token.type != RPAREN:
             if self.current_token.type != IDENTIFIER: return None, ParserException(self.current_token.line_number,"SyntaxError: Expected Type Before Identifier : " + self.current_token.literal)
             param_type = self.current_token.literal
@@ -209,6 +210,7 @@ class Parser:
                 return None, ParserException(self.current_token.line_number,"SyntaxError: Expected Comma After Parameter : " + param.__str__())
 
             self.advance()
+
         return parameters, None
 
     def parse_consequence(self) -> List[Node] and Exception:
@@ -299,15 +301,31 @@ class Parser:
             return self.parse_postfix(ArrayNode(self.line_number, nodes))
 
         elif self.current_token.type == IDENTIFIER:
-            identifier = self.current_token.literal
-            node = IdentifierNode(self.line_number,identifier)
-            self.advance()
-            if self.current_token.type == LPAREN:
-                params, err = self.parse_list(RPAREN)
-                if err != None: return None, err
+            if self.peek().type == ARROW:
+                return_type = self.current_token.literal
                 self.advance()
-                return self.parse_postfix(InvokeNode(self.line_number,identifier, params))
-            return self.parse_postfix(node)
+                if self.advance().type != LPAREN:
+                    return None, ParserException(self.current_token.line_number, "SyntaxError: Anonymous Function, Expected ( After =>")
+
+                self.advance()
+                params, err = self.parse_params()
+                if err != None: return None, err
+
+                if self.advance().type != LBRACE: 
+                    return None, ParserException(self.current_token.line_number,"SyntaxError: Expected { After Function Declaration")
+                self.advance()
+
+                consequence, err = self.parse_consequence()
+                if err != None: return ErrorNode, err
+
+                self.advance()
+                return self.parse_postfix(AnonymousFunctionNode(self.line_number, return_type, ProgramNode(self.line_number,consequence), params))
+
+
+            identifier = self.current_token.literal
+            identifier_node = IdentifierNode(self.line_number,identifier)
+            self.advance()
+            return self.parse_postfix(identifier_node)
 
         return None, ParserException(self.current_token.line_number,"SyntaxError: parse_prefix() unsupported prefix: " + self.current_token.literal)
 
@@ -334,6 +352,13 @@ class Parser:
                 return AssignNode(self.line_number,NULL, IndexNode(self.line_number,node,expr), expression), None
 
             return self.parse_postfix(IndexNode(self.line_number,node, expr))
+
+        if self.current_token.type == LPAREN:
+            params, err = self.parse_list(RPAREN)
+            if err != None: return None, err
+            self.advance()
+            return self.parse_postfix(InvokeNode(self.line_number,node, params))
+
         return node, None
 
     def parse_infix(self, left : Node, operation : str) -> Node and Exception:
