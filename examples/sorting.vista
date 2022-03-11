@@ -1,10 +1,12 @@
 load pygame;
 newWindow(500,500);
 
+int ELEMENT_NUMBER = 500;
+
 // Fill array with random integers -> 100 length
 []int populateArray() {
     []int array = [];
-    for (int i => range(500)) {
+    for (int i => range(ELEMENT_NUMBER)) {
         array = append(array, rnd(500));
     }
     return array;
@@ -12,7 +14,11 @@ newWindow(500,500);
 
 []int bubbleSort([]int list) {
     for(int i => range(length(list))) {
+        // For every element in array, switch if greater, this moves the greatest value to the end
+        // Repeat for each element in the array
         for (int j => range(length(list) - 1)) {
+            // If a is greater than a+1, then switch there places
+            // if this is repeated for each element, the greatest element will be moved to the end of the array
             if (list[j] > list[j+1]) {
                 int nextElement = list[j+1];
                 list[j+1] = list[j];
@@ -24,18 +30,20 @@ newWindow(500,500);
     return list;
 }
 
+// Draw a graphical representation of the array
 null drawBars([]int list) {
     clear();
 
     float gap = 500/length(list);
-
     int i = 0;
+
     for (int element => list) {
         rect(
             [int(i*gap), 500-element], 
             [float(gap),float(element)], 
             [0,0,0]
         );
+
         i = i + 1;
     }
     updateScreen();

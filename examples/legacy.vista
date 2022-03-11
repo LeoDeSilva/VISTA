@@ -16,7 +16,7 @@ int clamp(int value, int min, int max) {
     return value;
 }
 
-null update() {
+pygameInit(null => (){
     clear();
 
     prev = pos;
@@ -28,6 +28,4 @@ null update() {
 
     rect(prev, size, [255,0,0]);
     rect(pos, size, [0,0,0]);
-}
-
-pygameInit();
+});

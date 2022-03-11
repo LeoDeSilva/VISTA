@@ -28,7 +28,7 @@ def handle_newWindow(node : InvokeNode, environment : Environment) -> Object and
 
 def handle_pygameInit(node : InvokeNode, environment : Environment) -> Object and Environment and Exception:
     if len(node.parameters) != 1:
-        return None, None, EvaluatorException("pygameInitError: Expected parameter length 1, got:" + str(len(node.parameters)))
+        return None, None, EvaluatorException(environment.lineNumber,"pygameInitError: Expected parameter length 1, got:" + str(len(node.parameters)))
 
     running = True 
     while running:
