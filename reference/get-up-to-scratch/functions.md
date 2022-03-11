@@ -39,3 +39,30 @@ string greeting = printName("Leo");
 ```
 
 Not that the final line will produce an error since `printName` returns no value
+
+### Anonymous Functions
+
+Anonymous functoins are functions without an identifier, these are often used to pass into other functions such as `update()`
+
+```csharp
+update(null => (){
+    print("Clock cycle");
+})
+```
+
+They can also except parameters, If assigned to a variable, they can be called as normal functions, however they can also be evaluated after the function defenition by plasing the `()` with the parameters after the declaration
+
+```csharp
+int add = int => (int a, int b){
+   return a + b;
+}
+
+add(10,5);
+
+// To print the first index in an array 
+print(int => ([]int array) {
+   return array[0];
+}([1,2,3]));
+```
+
+They can also be used to pass functions that require a parameter into a function such as `update()`that does not accept parameters
