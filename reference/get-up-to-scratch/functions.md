@@ -66,3 +66,17 @@ print(int => ([]int array) {
 ```
 
 They can also be used to pass functions that require a parameter into a function such as `update()`that does not accept parameters
+
+```csharp
+int size = 0;
+
+null update(int size) {
+    clear();
+    size = size + 1;
+    rect([250-size/2,250-size/2], [size,size], [255,0,0]);
+}
+
+pygameInit(null => (){
+    update(size);
+}());
+```
